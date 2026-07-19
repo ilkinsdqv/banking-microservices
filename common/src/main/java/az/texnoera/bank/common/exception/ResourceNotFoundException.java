@@ -1,7 +1,9 @@
 package az.texnoera.bank.common.exception;
 
+import az.texnoera.bank.common.api.ErrorCode;
+
 public class ResourceNotFoundException extends BusinessException {
-    protected ResourceNotFoundException(String message) {
-        super(message);
+    protected ResourceNotFoundException(ErrorCode code, String message) {
+        super(code, message);
     }
 }

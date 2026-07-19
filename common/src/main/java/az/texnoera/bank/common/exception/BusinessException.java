@@ -1,7 +1,17 @@
 package az.texnoera.bank.common.exception;
 
-public class BusinessException extends RuntimeException {
-    protected BusinessException(String message) {
+import az.texnoera.bank.common.api.ErrorCode;
+
+public abstract class BusinessException extends RuntimeException {
+
+    private final ErrorCode errorCode;
+
+    protected BusinessException(ErrorCode errorCode, String message) {
         super(message);
+        this.errorCode = errorCode;
+    }
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }
