@@ -11,6 +11,6 @@ public class UserNotFoundException extends ResourceNotFoundException {
     }
 
     public UserNotFoundException(UUID id) {
-        super(ErrorCode.USER_NOT_FOUND ,"User not found with ID: " + id);
+        super(ErrorCode.USER_NOT_FOUND ,"User not found with id: " + id);
     }
 }

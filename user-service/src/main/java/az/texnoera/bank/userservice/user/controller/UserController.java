@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Tag(
         name = "User Management",
         description = "Operations related to user management"
@@ -44,5 +46,24 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.createUser(request);
+    }
+
+    @Operation(
+            summary = "Get user by ID",
+            description = "Retrieves the details of a user by their unique ID."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User retrieved successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @GetMapping("/{id}")
+    public UserResponse getUserById(@PathVariable UUID id) {
+        return userService.getUserById(id);
     }
 }

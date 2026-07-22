@@ -6,6 +6,7 @@ import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
 import az.texnoera.bank.userservice.user.exception.EmailAlreadyExistsException;
 import az.texnoera.bank.userservice.user.exception.FinAlreadyExistsException;
+import az.texnoera.bank.userservice.user.exception.UserNotFoundException;
 import az.texnoera.bank.userservice.user.mapper.UserMapper;
 import az.texnoera.bank.userservice.user.repository.UserRepository;
 import az.texnoera.bank.userservice.user.service.UserService;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -48,5 +50,13 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         return userMapper.toResponse(savedUser);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserResponse getUserById(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        return userMapper.toResponse(user);
     }
 }
