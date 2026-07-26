@@ -80,4 +80,12 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.toResponse(user);
     }
+
+    @Transactional
+    @Override
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        userRepository.delete(user);
+    }
 }

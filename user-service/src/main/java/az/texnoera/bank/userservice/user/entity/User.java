@@ -4,11 +4,17 @@ import az.texnoera.bank.common.persistence.BaseEntity;
 import az.texnoera.bank.userservice.user.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+@SoftDelete(
+        strategy = SoftDeleteType.DELETED,
+        columnName = "deleted"
+)
 @Entity
 @Table(name = "users")
 @Getter
@@ -35,7 +41,7 @@ public class User extends BaseEntity {
     )
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles =  new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
 
     @Column(nullable = false, length = 7, unique = true)
     private String fin;
@@ -46,10 +52,14 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private LocalDate birthDate;
 
+
+    @Column(nullable = false)
     private boolean emailVerified = false;
 
+    @Column(nullable = false)
     private boolean accountLocked = false;
 
+    @Column(nullable = false)
     private boolean enabled = true;
 
     public User(
@@ -80,6 +90,5 @@ public class User extends BaseEntity {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
-    };
-
+    }
 }

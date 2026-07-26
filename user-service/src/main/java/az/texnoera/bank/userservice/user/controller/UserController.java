@@ -121,4 +121,24 @@ public class UserController {
     ) {
         return userService.updateUser(id, request);
     }
+
+    @Operation(
+            summary = "Delete user",
+            description = "Deletes an existing user by their unique ID."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "User deleted successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
+    }
 }

@@ -14,4 +14,5 @@ public interface UserService {
     UserResponse getUserById(UUID id);
     Page<UserResponse> getAllUsers(Pageable pageable);
     UserResponse updateUser(UUID id, UpdateUserRequest request);
+    void deleteUser(UUID id);
 }
