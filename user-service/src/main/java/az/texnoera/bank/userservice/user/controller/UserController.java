@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,7 +29,6 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
-    //Create User
     @Operation(
             summary = "Create a new user",
             description = "Creates a new user in the system and returns the created user's details."
@@ -53,7 +53,6 @@ public class UserController {
         return userService.createUser(request);
     }
 
-    //Get user by id
     @Operation(
             summary = "Get user by ID",
             description = "Retrieves the details of a user by their unique ID."
@@ -73,7 +72,6 @@ public class UserController {
         return userService.getUserById(id);
     }
 
-    //Get all users with pagination and sorting
     @Operation(
             summary = "Get all users",
             description = "Retrieves users with pagination and sorting support"
@@ -86,6 +84,7 @@ public class UserController {
     })
     @GetMapping
     public Page<UserResponse> getAllUsers(
+            @ParameterObject
             @PageableDefault(
                     page = 0,
                     size = 10,
