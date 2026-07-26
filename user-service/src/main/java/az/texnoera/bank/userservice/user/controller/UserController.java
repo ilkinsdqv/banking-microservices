@@ -9,6 +9,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +28,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    //Create User
     @Operation(
             summary = "Create a new user",
             description = "Creates a new user in the system and returns the created user's details."
@@ -48,6 +53,7 @@ public class UserController {
         return userService.createUser(request);
     }
 
+    //Get user by id
     @Operation(
             summary = "Get user by ID",
             description = "Retrieves the details of a user by their unique ID."
@@ -65,5 +71,28 @@ public class UserController {
     @GetMapping("/{id}")
     public UserResponse getUserById(@PathVariable UUID id) {
         return userService.getUserById(id);
+    }
+
+    //Get all users with pagination and sorting
+    @Operation(
+            summary = "Get all users",
+            description = "Retrieves users with pagination and sorting support"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Users retrieved successfully"
+            )
+    })
+    @GetMapping
+    public Page<UserResponse> getAllUsers(
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable) {
+        return userService.getAllUsers(pageable);
     }
 }
