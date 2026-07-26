@@ -1,6 +1,7 @@
 package az.texnoera.bank.userservice.user.controller;
 
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
+import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,5 +94,31 @@ public class UserController {
             )
             Pageable pageable) {
         return userService.getAllUsers(pageable);
+    }
+
+    @Operation(
+            summary = "Update user",
+            description = "Updates the details of an existing user by their unique ID."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User updated successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation failed"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PutMapping("/{id}")
+    public UserResponse updateUser(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserRequest request
+    ) {
+        return userService.updateUser(id, request);
     }
 }

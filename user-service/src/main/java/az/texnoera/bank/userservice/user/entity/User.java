@@ -76,4 +76,10 @@ public class User extends BaseEntity {
         this.accountLocked = false;
     }
 
+    public void updateProfile(String firstName, String lastName, String phoneNumber) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+    };
+
 }

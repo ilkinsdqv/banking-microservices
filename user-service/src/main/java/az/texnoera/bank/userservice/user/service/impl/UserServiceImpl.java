@@ -1,6 +1,7 @@
 package az.texnoera.bank.userservice.user.service.impl;
 
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
+import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
@@ -67,5 +68,16 @@ public class UserServiceImpl implements UserService {
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
                 .map(userMapper::toResponse);
+    }
+
+    @Transactional
+    @Override
+    public UserResponse updateUser(UUID id, UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.updateProfile(request.firstName(), request.lastName(), request.phoneNumber());
+
+        return userMapper.toResponse(user);
     }
 }
