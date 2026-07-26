@@ -29,9 +29,9 @@ public final class UserTestDataFactory {
 
     public static User createUser() {
         return new User(
-                "John",
-                "Doe",
-                "john.doe@example.com",
+                "Ali",
+                "Aliyev",
+                "user@test.com",
                 "Password123!",
                 Set.of(Role.CUSTOMER),
                 "ABCD123",
@@ -43,9 +43,9 @@ public final class UserTestDataFactory {
     public static UserResponse createUserResponse() {
         return new UserResponse(
                 USER_ID,
-                "Doe",
-                "john.doe@example.com",
-                "Password123!",
+                "Ali",
+                "Aliyev",
+                "user@test.com",
                 "ABCD123",
                 "+9994701111111",
                 LocalDate.of(1990, 1, 1),
