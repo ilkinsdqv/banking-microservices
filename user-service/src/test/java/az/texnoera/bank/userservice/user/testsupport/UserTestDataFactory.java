@@ -1,6 +1,7 @@
 package az.texnoera.bank.userservice.user.testsupport;
 
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
+import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
@@ -22,7 +23,7 @@ public final class UserTestDataFactory {
                 "user@test.com",
                 "Password123!",
                 "ABCD123",
-                "+9994701111111",
+                "+994701111111",
                 LocalDate.of(1990, 1, 1)
         );
     }
@@ -35,7 +36,7 @@ public final class UserTestDataFactory {
                 "Password123!",
                 Set.of(Role.CUSTOMER),
                 "ABCD123",
-                "+9994701111111",
+                "+994701111111",
                 LocalDate.of(1990, 1, 1)
         );
     }
@@ -47,12 +48,20 @@ public final class UserTestDataFactory {
                 "Aliyev",
                 "user@test.com",
                 "ABCD123",
-                "+9994701111111",
+                "+994701111111",
                 LocalDate.of(1990, 1, 1),
                 Set.of(Role.CUSTOMER),
                 false,
                 false,
                 true
+        );
+    }
+
+    public static UpdateUserRequest createUpdateUserRequest() {
+        return new UpdateUserRequest(
+                "Updated John",
+                "Updated Doe",
+                "+994501234567"
         );
     }
 }
