@@ -4,6 +4,7 @@ import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
+import az.texnoera.bank.userservice.user.exception.EmailAlreadyExistsException;
 import az.texnoera.bank.userservice.user.mapper.UserMapper;
 import az.texnoera.bank.userservice.user.repository.UserRepository;
 import az.texnoera.bank.userservice.user.service.impl.UserServiceImpl;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -69,8 +71,9 @@ class UserServiceImplTest {
         then(userRepository).should().existsByFin(request.fin());
         then(passwordEncoder).should().encode(request.password());
         then(userRepository).should().save(userCaptor.capture());
-        User capturedUser = userCaptor.getValue();
         then(userMapper).should().toResponse(any(User.class));
+
+        User capturedUser = userCaptor.getValue();
 
         assertThat(result).isEqualTo(response);
         assertThat(capturedUser.getFirstName())
@@ -96,6 +99,34 @@ class UserServiceImplTest {
 
         assertThat(capturedUser.getRoles())
                 .containsExactly(Role.CUSTOMER);
+    }
+
+    @Test
+    void createUser_ShouldThrowEmailAlreadyExistsException_WhenEmailAlreadyExists() {
+
+        // Given
+        CreateUserRequest request = UserTestDataFactory.createUserRequest();
+
+        given(userRepository.existsByEmail(request.email()))
+                .willReturn(true);
+
+        // When / Then
+        assertThatThrownBy(() -> userService.createUser(request))
+                .isInstanceOf(EmailAlreadyExistsException.class)
+                .hasMessageContaining(request.email());
+
+        then(userRepository)
+                .should()
+                .existsByEmail(request.email());
+
+        then(userRepository)
+                .shouldHaveNoMoreInteractions();
+
+        then(passwordEncoder)
+                .shouldHaveNoInteractions();
+
+        then(userMapper)
+                .shouldHaveNoInteractions();
     }
 
 }
