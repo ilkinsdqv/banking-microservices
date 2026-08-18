@@ -1,15 +1,20 @@
 package az.texnoera.bank.userservice.user.service.impl;
 
+import az.texnoera.bank.userservice.user.client.NotificationClient;
+import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
+import az.texnoera.bank.userservice.user.dto.request.VerificationEmailRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
 import az.texnoera.bank.userservice.user.exception.EmailAlreadyExistsException;
 import az.texnoera.bank.userservice.user.exception.FinAlreadyExistsException;
+import az.texnoera.bank.userservice.user.exception.InvalidPasswordException;
 import az.texnoera.bank.userservice.user.exception.UserNotFoundException;
 import az.texnoera.bank.userservice.user.mapper.UserMapper;
 import az.texnoera.bank.userservice.user.repository.UserRepository;
+import az.texnoera.bank.userservice.user.service.EmailVerificationService;
 import az.texnoera.bank.userservice.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +32,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
+    private final NotificationClient notificationClient;
 
     @Transactional
     @Override
@@ -52,6 +59,18 @@ public class UserServiceImpl implements UserService {
         );
 
         User savedUser = userRepository.save(user);
+
+        String verificationToken =
+                emailVerificationService.createVerificationToken(savedUser);
+
+        notificationClient.sendVerificationEmail(
+                new VerificationEmailRequest(
+                        savedUser.getEmail(),
+                        savedUser.getFirstName(),
+                        verificationToken
+                )
+        );
+
         return userMapper.toResponse(savedUser);
     }
 
@@ -87,5 +106,58 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(user);
+    }
+
+    @Transactional
+    @Override
+    public void changePassword(UUID id, ChangePasswordRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPassword()
+        )) {
+            throw new InvalidPasswordException();
+        }
+
+        String encodedPassword =
+                passwordEncoder.encode(request.newPassword());
+
+        user.changePassword(encodedPassword);
+    }
+
+    @Transactional
+    @Override
+    public void enableUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.enable();
+    }
+
+    @Transactional
+    @Override
+    public void disableUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.disable();
+    }
+
+    @Transactional
+    @Override
+    public void lockUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.lock();
+    }
+
+    @Transactional
+    @Override
+    public void unlockUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.unlock();
     }
 }

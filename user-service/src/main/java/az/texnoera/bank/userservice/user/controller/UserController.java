@@ -1,8 +1,10 @@
 package az.texnoera.bank.userservice.user.controller;
 
+import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
+import az.texnoera.bank.userservice.user.service.EmailVerificationService;
 import az.texnoera.bank.userservice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +31,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final EmailVerificationService emailVerificationService;
 
     @Operation(
             summary = "Create a new user",
@@ -140,5 +143,132 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
+    }
+
+    @Operation(
+            summary = "Change user password",
+            description = "Changes the password of an existing user."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Password changed successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid password or validation failed"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PatchMapping("/{id}/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changePassword(id, request);
+    }
+
+    @Operation(
+            summary = "Enable user",
+            description = "Enables an existing user account."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "User enabled successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PostMapping("/{id}/enable")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void enableUser(@PathVariable UUID id) {
+        userService.enableUser(id);
+    }
+
+    @Operation(
+            summary = "Disable user",
+            description = "Disables an existing user account."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "User disabled successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PostMapping("/{id}/disable")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void disableUser(@PathVariable UUID id) {
+        userService.disableUser(id);
+    }
+
+    @Operation(
+            summary = "Lock user",
+            description = "Locks an existing user account."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "User locked successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PostMapping("/{id}/lock")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void lockUser(@PathVariable UUID id) {
+        userService.lockUser(id);
+    }
+
+    @Operation(
+            summary = "Unlock user",
+            description = "Unlocks an existing user account."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "User unlocked successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    @PostMapping("/{id}/unlock")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlockUser(@PathVariable UUID id) {
+        userService.unlockUser(id);
+    }
+
+    @Operation(
+            summary = "Verify email",
+            description = "Verifies a user's email address using a verification token."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Email verified successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid or expired verification token"
+            )
+    })
+    @GetMapping("/email-verification/verify")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void verifyEmail(@RequestParam String token) {
+        emailVerificationService.verifyEmail(token);
     }
 }
