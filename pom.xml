@@ -43,7 +43,7 @@
 
         <!--        <module>loan-service</module>-->
 
-        <!--        <module>notification-service</module>-->
+        <module>notification-service</module>
 
         <!--        <module>complaint-service</module>-->
 

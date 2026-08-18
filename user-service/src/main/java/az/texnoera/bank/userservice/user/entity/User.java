@@ -91,4 +91,28 @@ public class User extends BaseEntity {
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
     }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void enable() {
+        this.enabled = true;
+    }
+
+    public void disable() {
+        this.enabled = false;
+    }
+
+    public void lock() {
+        this.accountLocked = true;
+    }
+
+    public void unlock() {
+        this.accountLocked = false;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
+    }
 }
