@@ -3,6 +3,7 @@ package az.texnoera.bank.userservice.user.controller;
 import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
+import az.texnoera.bank.userservice.user.dto.response.UserAuthResponse;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.service.EmailVerificationService;
 import az.texnoera.bank.userservice.user.service.UserService;
@@ -270,5 +271,12 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void verifyEmail(@RequestParam String token) {
         emailVerificationService.verifyEmail(token);
+    }
+
+    @GetMapping("/authentication")
+    public UserAuthResponse getUserForAuthentication(
+            @RequestParam String email
+    ) {
+        return userService.getUserForAuthentication(email);
     }
 }

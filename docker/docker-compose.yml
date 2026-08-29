@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: postgres:17
     container_name: banking-postgres
@@ -6,23 +7,28 @@ services:
     environment:
       POSTGRES_USER: bank_user
       POSTGRES_PASSWORD: bank_password
-      POSTGRES_DB: banking_db
+      POSTGRES_DB: user_db
 
     ports:
       - "5432:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
 
     restart: unless-stopped
+
 
   mailpit:
     image: axllent/mailpit:latest
     container_name: banking-mailpit
+
     restart: unless-stopped
+
     ports:
       - "1025:1025"
       - "8025:8025"
+
 
 volumes:
   postgres_data:
