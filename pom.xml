@@ -31,7 +31,7 @@
 
         <!--        <module>config-service</module>-->
 
-        <!--        <module>gateway-service</module>-->
+        <module>api-gateway</module>
 
         <module>auth-service</module>
 

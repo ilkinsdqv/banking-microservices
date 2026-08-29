@@ -7,6 +7,7 @@
         <groupId>az.texnoera.bank</groupId>
         <artifactId>banking-system</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>user-service</artifactId>
