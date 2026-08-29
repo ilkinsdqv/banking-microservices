@@ -1,5 +1,6 @@
 package az.texnoera.bank.authservice.entity;
 
+import az.texnoera.bank.common.persistence.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,11 +18,7 @@ import java.util.UUID;
 @Table(name = "refresh_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RefreshToken {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class RefreshToken extends BaseEntity {
 
     @Column(nullable = false)
     private UUID userId;
