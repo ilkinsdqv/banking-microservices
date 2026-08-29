@@ -2,6 +2,7 @@ package az.texnoera.bank.authservice.service.impl;
 
 import az.texnoera.bank.authservice.client.UserClient;
 import az.texnoera.bank.authservice.dto.request.LoginRequest;
+import az.texnoera.bank.authservice.dto.request.RefreshTokenRequest;
 import az.texnoera.bank.authservice.dto.response.LoginResponse;
 import az.texnoera.bank.authservice.dto.response.UserAuthResponse;
 import az.texnoera.bank.authservice.entity.RefreshToken;
@@ -62,5 +63,36 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 jwtProperties.getAccessTokenExpiration() / 1000
         );
+    }
+
+    @Override
+    public LoginResponse refreshToken(RefreshTokenRequest request) {
+
+        RefreshToken refreshToken =
+                refreshTokenService.validateRefreshToken(
+                        request.refreshToken()
+                );
+
+        UserAuthResponse user =
+                userClient.getUserForAuthenticationById(
+                        refreshToken.getUserId()
+                );
+
+        String accessToken = jwtService.generateAccessToken(
+                user.id(),
+                user.roles()
+        );
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken.getToken(),
+                "Bearer",
+                jwtProperties.getAccessTokenExpiration() / 1000
+        );
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRefreshToken(refreshToken);
     }
 }

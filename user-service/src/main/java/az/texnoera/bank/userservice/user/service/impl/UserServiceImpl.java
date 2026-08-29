@@ -187,4 +187,29 @@ public class UserServiceImpl implements UserService {
                 user.isEnabled()
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAuthResponse getUserForAuthenticationById(UUID id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + id
+                        )
+                );
+
+        return new UserAuthResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRoles()
+                        .stream()
+                        .map(Enum::name)
+                        .collect(Collectors.toSet()),
+                user.isEmailVerified(),
+                user.isAccountLocked(),
+                user.isEnabled()
+        );
+    }
 }

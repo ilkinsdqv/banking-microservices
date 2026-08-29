@@ -279,4 +279,11 @@ public class UserController {
     ) {
         return userService.getUserForAuthentication(email);
     }
+
+    @GetMapping("/authentication/{id}")
+    public UserAuthResponse getUserForAuthenticationById(
+            @PathVariable UUID id
+    ) {
+        return userService.getUserForAuthenticationById(id);
+    }
 }

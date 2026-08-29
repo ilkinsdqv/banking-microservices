@@ -23,4 +23,5 @@ public interface UserService {
     void lockUser(UUID id);
     void unlockUser(UUID id);
     UserAuthResponse getUserForAuthentication(String email);
+    UserAuthResponse getUserForAuthenticationById(UUID id);
 }
