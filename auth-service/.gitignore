@@ -31,8 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-*.env
-
-### Local project specs / analysis ###
-specs/

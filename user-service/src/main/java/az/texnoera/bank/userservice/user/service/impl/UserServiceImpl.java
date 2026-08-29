@@ -5,6 +5,7 @@ import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.VerificationEmailRequest;
+import az.texnoera.bank.userservice.user.dto.response.UserAuthResponse;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -159,5 +161,55 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
 
         user.unlock();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAuthResponse getUserForAuthentication(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: " + email
+                        )
+                );
+
+        return new UserAuthResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRoles()
+                        .stream()
+                        .map(Enum::name)
+                        .collect(Collectors.toSet()),
+                user.isEmailVerified(),
+                user.isAccountLocked(),
+                user.isEnabled()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAuthResponse getUserForAuthenticationById(UUID id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + id
+                        )
+                );
+
+        return new UserAuthResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRoles()
+                        .stream()
+                        .map(Enum::name)
+                        .collect(Collectors.toSet()),
+                user.isEmailVerified(),
+                user.isAccountLocked(),
+                user.isEnabled()
+        );
     }
 }
