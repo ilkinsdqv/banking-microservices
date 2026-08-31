@@ -7,6 +7,7 @@
         <groupId>az.texnoera.bank</groupId>
         <artifactId>banking-system</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>user-service</artifactId>
@@ -68,6 +69,26 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
