@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -34,59 +35,19 @@ public class UserController {
     private final UserService userService;
     private final EmailVerificationService emailVerificationService;
 
-    @Operation(
-            summary = "Create a new user",
-            description = "Creates a new user in the system and returns the created user's details."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "User created successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Validation failed"
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "User already exists"
-            )
-    })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.createUser(request);
     }
 
-    @Operation(
-            summary = "Get user by ID",
-            description = "Retrieves the details of a user by their unique ID."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "User retrieved successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN') or @userSecurityService.isCurrentUser(authentication, #id)")
     @GetMapping("/{id}")
     public UserResponse getUserById(@PathVariable UUID id) {
         return userService.getUserById(id);
     }
 
-    @Operation(
-            summary = "Get all users",
-            description = "Retrieves users with pagination and sorting support"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Users retrieved successfully"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public Page<UserResponse> getAllUsers(
             @ParameterObject
@@ -100,24 +61,7 @@ public class UserController {
         return userService.getAllUsers(pageable);
     }
 
-    @Operation(
-            summary = "Update user",
-            description = "Updates the details of an existing user by their unique ID."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "User updated successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Validation failed"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN') or @userSecurityService.isCurrentUser(authentication, #id)")
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable UUID id,
@@ -126,44 +70,14 @@ public class UserController {
         return userService.updateUser(id, request);
     }
 
-    @Operation(
-            summary = "Delete user",
-            description = "Deletes an existing user by their unique ID."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "User deleted successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
     }
 
-    @Operation(
-            summary = "Change user password",
-            description = "Changes the password of an existing user."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Password changed successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid password or validation failed"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("@userSecurityService.isCurrentUser(authentication, #id)")
     @PatchMapping("/{id}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(
@@ -173,100 +87,34 @@ public class UserController {
         userService.changePassword(id, request);
     }
 
-    @Operation(
-            summary = "Enable user",
-            description = "Enables an existing user account."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "User enabled successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/enable")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void enableUser(@PathVariable UUID id) {
         userService.enableUser(id);
     }
 
-    @Operation(
-            summary = "Disable user",
-            description = "Disables an existing user account."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "User disabled successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/disable")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void disableUser(@PathVariable UUID id) {
         userService.disableUser(id);
     }
 
-    @Operation(
-            summary = "Lock user",
-            description = "Locks an existing user account."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "User locked successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/lock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void lockUser(@PathVariable UUID id) {
         userService.lockUser(id);
     }
 
-    @Operation(
-            summary = "Unlock user",
-            description = "Unlocks an existing user account."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "User unlocked successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "User not found"
-            )
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/unlock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void unlockUser(@PathVariable UUID id) {
         userService.unlockUser(id);
     }
 
-    @Operation(
-            summary = "Verify email",
-            description = "Verifies a user's email address using a verification token."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Email verified successfully"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid or expired verification token"
-            )
-    })
     @GetMapping("/email-verification/verify")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void verifyEmail(@RequestParam String token) {
