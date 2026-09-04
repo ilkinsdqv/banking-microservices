@@ -2,32 +2,5 @@ spring:
   application:
     name: auth-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/auth_db
-    username: bank_user
-    password: bank_password
-
-  flyway:
-    enabled: true
-
-server:
-  port: 8082
-
-jwt:
-  secret: ${JWT_SECRET}
-  access-token-expiration: 900000
-
-clients:
-  user-service:
-    url: http://localhost:8081
-
-eureka:
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    register-with-eureka: true
-    fetch-registry: true
+  config:
+    import: optional:configserver:http://localhost:8888
