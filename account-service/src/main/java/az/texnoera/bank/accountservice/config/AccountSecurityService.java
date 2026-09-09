@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Component
+@Component("accountSecurityService")
 @RequiredArgsConstructor
 public class AccountSecurityService {
 
@@ -18,38 +18,53 @@ public class AccountSecurityService {
             Authentication authentication,
             UUID accountId
     ) {
-        if (authentication == null ||
-                !authentication.isAuthenticated()) {
+
+        if (authentication == null) {
             return false;
         }
 
-        Object principal = authentication.getPrincipal();
+        UUID currentUserId = extractUserId(authentication);
 
-        if (!(principal instanceof UUID currentUserId)) {
+
+        if (currentUserId == null) {
             return false;
         }
 
-        return accountRepository.findById(accountId)
-                .map(Account::getUserId)
-                .map(currentUserId::equals)
-                .orElse(false);
+        Account account = accountRepository.findById(accountId)
+                .orElse(null);
+
+        if (account == null) {
+            return false;
+        }
+        return currentUserId.equals(account.getUserId());
     }
 
     public boolean isCurrentUser(
             Authentication authentication,
             UUID userId
     ) {
-        if (authentication == null ||
-                !authentication.isAuthenticated()) {
-            return false;
-        }
+        UUID currentUserId = extractUserId(authentication);
+
+        return currentUserId != null
+                && currentUserId.equals(userId);
+    }
+
+    private UUID extractUserId(Authentication authentication) {
 
         Object principal = authentication.getPrincipal();
 
-        if (!(principal instanceof UUID currentUserId)) {
-            return false;
+        if (principal instanceof UUID userId) {
+            return userId;
         }
 
-        return currentUserId.equals(userId);
+        if (principal instanceof String userId) {
+            try {
+                return UUID.fromString(userId);
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        return null;
     }
 }
