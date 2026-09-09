@@ -74,4 +74,36 @@ public class AccountServiceImpl implements AccountService {
                 .map(accountMapper::toResponse)
                 .toList();
     }
+
+    @Override
+    @Transactional
+    public AccountResponse deposit(
+            UUID accountId,
+            BigDecimal amount
+    ) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() ->
+                        new AccountNotFoundException(accountId)
+                );
+
+        account.deposit(amount);
+
+        return accountMapper.toResponse(account);
+    }
+
+    @Override
+    @Transactional
+    public AccountResponse withdraw(
+            UUID accountId,
+            BigDecimal amount
+    ) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() ->
+                        new AccountNotFoundException(accountId)
+                );
+
+        account.withdraw(amount);
+
+        return accountMapper.toResponse(account);
+    }
 }

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: transaction-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/transaction_db
+    username: bank_user
+    password: bank_password
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8085
+
+jwt:
+  secret: ${JWT_SECRET}
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+    register-with-eureka: true
+    fetch-registry: true

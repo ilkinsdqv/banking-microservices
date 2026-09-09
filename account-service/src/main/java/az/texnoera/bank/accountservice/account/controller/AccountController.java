@@ -1,5 +1,6 @@
 package az.texnoera.bank.accountservice.account.controller;
 
+import az.texnoera.bank.accountservice.account.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.accountservice.account.dto.request.CreateAccountRequest;
 import az.texnoera.bank.accountservice.account.dto.response.AccountResponse;
 import az.texnoera.bank.accountservice.account.service.AccountService;
@@ -51,6 +52,34 @@ public class AccountController {
     ) {
         return ResponseEntity.ok(
                 accountService.getAccountsByUserId(userId)
+        );
+    }
+
+    @PostMapping("/{id}/deposit")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<AccountResponse> deposit(
+            @PathVariable UUID id,
+            @Valid @RequestBody BalanceOperationRequest request
+    ) {
+        return ResponseEntity.ok(
+                accountService.deposit(
+                        id,
+                        request.amount()
+                )
+        );
+    }
+
+    @PostMapping("/{id}/withdraw")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<AccountResponse> withdraw(
+            @PathVariable UUID id,
+            @Valid @RequestBody BalanceOperationRequest request
+    ) {
+        return ResponseEntity.ok(
+                accountService.withdraw(
+                        id,
+                        request.amount()
+                )
         );
     }
 }

@@ -17,6 +17,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final InternalServiceAuthenticationFilter
+            internalServiceAuthenticationFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
@@ -30,6 +33,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
+                )
+                .addFilterBefore(
+                        internalServiceAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,

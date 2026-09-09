@@ -49,4 +49,30 @@ public class Account extends BaseEntity {
         this.currency = currency;
         this.type = type;
     }
+
+    public void deposit(BigDecimal amount) {
+        validatePositiveAmount(amount);
+
+        this.balance = this.balance.add(amount);
+    }
+
+    public void withdraw(BigDecimal amount) {
+        validatePositiveAmount(amount);
+
+        if (this.balance.compareTo(amount) < 0) {
+            throw new IllegalStateException(
+                    "Insufficient account balance"
+            );
+        }
+
+        this.balance = this.balance.subtract(amount);
+    }
+
+    private void validatePositiveAmount(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(
+                    "Amount must be greater than zero"
+            );
+        }
+    }
 }
