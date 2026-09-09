@@ -7,7 +7,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,15 +22,20 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AccountResponse> createAccount(
+            Authentication authentication,
             @Valid @RequestBody CreateAccountRequest request
     ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(accountService.createAccount(request));
+                .body(accountService.createAccount(userId, request));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @accountSecurityService.isOwner(authentication, #id)")
     public ResponseEntity<AccountResponse> getAccountById(
             @PathVariable UUID id
     ) {
@@ -38,6 +45,7 @@ public class AccountController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or @accountSecurityService.isCurrentUser(authentication, #userId)")
     public ResponseEntity<List<AccountResponse>> getAccountsByUserId(
             @PathVariable UUID userId
     ) {

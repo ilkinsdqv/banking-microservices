@@ -3,10 +3,12 @@ package az.texnoera.bank.accountservice.account.service.impl;
 import az.texnoera.bank.accountservice.account.dto.request.CreateAccountRequest;
 import az.texnoera.bank.accountservice.account.dto.response.AccountResponse;
 import az.texnoera.bank.accountservice.account.entity.Account;
+import az.texnoera.bank.accountservice.account.exception.AccountNotFoundException;
 import az.texnoera.bank.accountservice.account.mapper.AccountMapper;
 import az.texnoera.bank.accountservice.account.repository.AccountRepository;
 import az.texnoera.bank.accountservice.account.service.AccountService;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
+import az.texnoera.bank.accountservice.client.UserClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +24,15 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final IbanGenerator ibanGenerator;
+    private final UserClient userClient;
 
     @Override
     @Transactional
-    public AccountResponse createAccount(CreateAccountRequest request) {
+    public AccountResponse createAccount(UUID userId, CreateAccountRequest request) {
+
+        if (!userClient.userExists(userId)) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
 
         String iban;
 
@@ -34,7 +41,7 @@ public class AccountServiceImpl implements AccountService {
         } while (accountRepository.existsByIban(iban));
 
         Account account = new Account(
-                request.userId(),
+                userId,
                 iban,
                 BigDecimal.ZERO,
                 request.currency(),
@@ -52,7 +59,7 @@ public class AccountServiceImpl implements AccountService {
 
         Account account = accountRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Account not found: " + id)
+                        new AccountNotFoundException(id)
                 );
 
         return accountMapper.toResponse(account);

@@ -212,4 +212,10 @@ public class UserServiceImpl implements UserService {
                 user.isEnabled()
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID id) {
+        return userRepository.existsById(id);
+    }
 }

@@ -19,6 +19,12 @@ spring:
 server:
   port: 8084
 
+jwt:
+  secret: ${JWT_SECRET}
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
 eureka:
   instance:
     hostname: localhost

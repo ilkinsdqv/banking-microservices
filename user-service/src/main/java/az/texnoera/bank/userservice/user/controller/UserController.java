@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -133,5 +135,13 @@ public class UserController {
             @PathVariable UUID id
     ) {
         return userService.getUserForAuthenticationById(id);
+    }
+
+    @GetMapping("/{id}/exists")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<Boolean> userExists(
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(userService.existsById(id));
     }
 }

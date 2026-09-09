@@ -8,7 +8,10 @@ import java.util.UUID;
 
 public interface AccountService {
 
-    AccountResponse createAccount(CreateAccountRequest request);
+    AccountResponse createAccount(
+            UUID userId,
+            CreateAccountRequest request
+    );
 
     AccountResponse getAccountById(UUID id);
 

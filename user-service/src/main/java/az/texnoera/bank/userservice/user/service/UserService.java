@@ -24,4 +24,5 @@ public interface UserService {
     void unlockUser(UUID id);
     UserAuthResponse getUserForAuthentication(String email);
     UserAuthResponse getUserForAuthenticationById(UUID id);
+    boolean existsById(UUID id);
 }
