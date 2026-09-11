@@ -188,7 +188,7 @@ public class TransactionServiceImpl
     ) {
 
         return transactionRepository
-                .findAllByFromAccountId(accountId)
+                .findAllByAccountId(accountId)
                 .stream()
                 .map(transactionMapper::toResponse)
                 .toList();

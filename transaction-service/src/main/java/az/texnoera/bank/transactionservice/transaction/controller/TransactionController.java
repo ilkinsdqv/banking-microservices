@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,10 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@transactionSecurityService.isOwner(authentication, #id)"
+    )
     public ResponseEntity<TransactionResponse> getTransactionById(
             @PathVariable UUID id
     ) {
@@ -47,6 +52,10 @@ public class TransactionController {
     }
 
     @GetMapping("/account/{accountId}")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@transactionSecurityService.isAccountOwner(authentication, #accountId)"
+    )
     public ResponseEntity<List<TransactionResponse>>
     getTransactionsByAccountId(
             @PathVariable UUID accountId
