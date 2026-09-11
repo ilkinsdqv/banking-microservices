@@ -40,7 +40,7 @@
 
         <module>transaction-service</module>
 
-        <!--        <module>loan-service</module>-->
+        <module>loan-service</module>
 
         <module>notification-service</module>
 
