@@ -14,7 +14,7 @@ import java.util.UUID;
 )
 public interface AccountClient {
 
-    @GetMapping("/api/v1/accounts/{id}")
+    @GetMapping("/api/v1/accounts/internal/{id}")
     AccountResponse getAccountById(
             @PathVariable UUID id
     );
