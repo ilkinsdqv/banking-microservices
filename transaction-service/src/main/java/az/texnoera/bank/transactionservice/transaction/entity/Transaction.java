@@ -60,4 +60,12 @@ public class Transaction extends BaseEntity {
         this.status = status;
         this.description = description;
     }
+
+    public void complete() {
+        this.status = TransactionStatus.COMPLETED;
+    }
+
+    public void fail() {
+        this.status = TransactionStatus.FAILED;
+    }
 }

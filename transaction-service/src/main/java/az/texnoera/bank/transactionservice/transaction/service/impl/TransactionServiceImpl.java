@@ -41,9 +41,7 @@ public class TransactionServiceImpl
         return switch (request.type()) {
             case DEPOSIT -> processDeposit(userId, request);
             case WITHDRAW -> processWithdraw(userId, request);
-            case TRANSFER -> throw new UnsupportedOperationException(
-                    "TRANSFER is not implemented yet"
-            );
+            case TRANSFER -> processTransfer(userId, request);
         };
     }
 
@@ -111,6 +109,106 @@ public class TransactionServiceImpl
         return transactionMapper.toResponse(
                 transactionRepository.save(transaction)
         );
+    }
+
+    private TransactionResponse processTransfer(
+            UUID userId,
+            CreateTransactionRequest request
+    ) {
+
+        AccountResponse sourceAccount =
+                accountClient.getAccountById(
+                        request.fromAccountId()
+                );
+
+        AccountResponse destinationAccount =
+                accountClient.getAccountById(
+                        request.toAccountId()
+                );
+
+        validateAccountOwner(sourceAccount, userId);
+
+        validateDifferentAccounts(
+                sourceAccount,
+                destinationAccount
+        );
+
+        validateCurrency(
+                sourceAccount,
+                request.currency()
+        );
+
+        validateCurrency(
+                destinationAccount,
+                request.currency()
+        );
+
+        Transaction transaction = new Transaction(
+                sourceAccount.id(),
+                destinationAccount.id(),
+                request.amount(),
+                request.currency(),
+                TransactionType.TRANSFER,
+                TransactionStatus.PENDING,
+                request.description()
+        );
+
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        try {
+
+            accountClient.withdraw(
+                    sourceAccount.id(),
+                    new BalanceOperationRequest(
+                            request.amount()
+                    )
+            );
+
+            try {
+
+                accountClient.deposit(
+                        destinationAccount.id(),
+                        new BalanceOperationRequest(
+                                request.amount()
+                        )
+                );
+
+            } catch (Exception depositException) {
+
+                try {
+                    accountClient.deposit(
+                            sourceAccount.id(),
+                            new BalanceOperationRequest(
+                                    request.amount()
+                            )
+                    );
+                } catch (Exception compensationException) {
+                    depositException.addSuppressed(
+                            compensationException
+                    );
+                }
+
+                savedTransaction.fail();
+                transactionRepository.save(savedTransaction);
+
+                throw depositException;
+            }
+
+            savedTransaction.complete();
+            transactionRepository.save(savedTransaction);
+
+            return transactionMapper.toResponse(
+                    savedTransaction
+            );
+
+        } catch (Exception exception) {
+
+            savedTransaction.fail();
+            transactionRepository.save(savedTransaction);
+
+            throw exception;
+        }
     }
 
     private void validateTransactionType(
@@ -192,5 +290,17 @@ public class TransactionServiceImpl
                 .stream()
                 .map(transactionMapper::toResponse)
                 .toList();
+    }
+
+    private void validateDifferentAccounts(
+            AccountResponse sourceAccount,
+            AccountResponse destinationAccount
+    ) {
+
+        if (sourceAccount.id().equals(destinationAccount.id())) {
+            throw new IllegalArgumentException(
+                    "Source and destination accounts must be different"
+            );
+        }
     }
 }
