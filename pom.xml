@@ -44,7 +44,7 @@
 
         <module>notification-service</module>
 
-        <!--        <module>complaint-service</module>-->
+        <module>complaint-service</module>
 
         <!--        <module>audit-service</module>-->
 
