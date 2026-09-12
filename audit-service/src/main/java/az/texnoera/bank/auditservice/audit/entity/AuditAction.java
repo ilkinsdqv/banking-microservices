@@ -1,0 +1,24 @@
+package az.texnoera.bank.auditservice.audit.entity;
+
+public enum AuditAction {
+
+    USER_LOGIN,
+    USER_REGISTERED,
+
+    ACCOUNT_CREATED,
+    MONEY_DEPOSITED,
+    MONEY_WITHDRAWN,
+    MONEY_TRANSFERRED,
+
+    LOAN_CREATED,
+    LOAN_APPROVED,
+    LOAN_REJECTED,
+    LOAN_ACTIVATED,
+    LOAN_PAYMENT,
+    LOAN_CANCELLED,
+
+    COMPLAINT_CREATED,
+    COMPLAINT_STARTED,
+    COMPLAINT_RESOLVED,
+    COMPLAINT_CLOSED
+}
