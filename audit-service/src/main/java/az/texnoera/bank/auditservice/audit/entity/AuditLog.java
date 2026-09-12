@@ -1,6 +1,8 @@
 package az.texnoera.bank.auditservice.audit.entity;
 
 import az.texnoera.bank.common.persistence.BaseEntity;
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

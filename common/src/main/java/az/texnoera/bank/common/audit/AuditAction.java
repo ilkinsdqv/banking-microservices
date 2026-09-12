@@ -1,4 +1,4 @@
-package az.texnoera.bank.auditservice.audit.entity;
+package az.texnoera.bank.common.audit;
 
 public enum AuditAction {
 

@@ -2,8 +2,8 @@ package az.texnoera.bank.auditservice.audit.controller;
 
 import az.texnoera.bank.auditservice.audit.dto.request.CreateAuditLogRequest;
 import az.texnoera.bank.auditservice.audit.dto.response.AuditLogResponse;
-import az.texnoera.bank.auditservice.audit.entity.AuditAction;
 import az.texnoera.bank.auditservice.audit.service.AuditLogService;
+import az.texnoera.bank.common.audit.AuditAction;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

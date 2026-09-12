@@ -1,7 +1,7 @@
 package az.texnoera.bank.auditservice.audit.dto.request;
 
-import az.texnoera.bank.auditservice.audit.entity.AuditAction;
-import az.texnoera.bank.auditservice.audit.entity.AuditStatus;
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

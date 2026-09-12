@@ -1,7 +1,7 @@
 package az.texnoera.bank.auditservice.audit.repository;
 
-import az.texnoera.bank.auditservice.audit.entity.AuditAction;
 import az.texnoera.bank.auditservice.audit.entity.AuditLog;
+import az.texnoera.bank.common.audit.AuditAction;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

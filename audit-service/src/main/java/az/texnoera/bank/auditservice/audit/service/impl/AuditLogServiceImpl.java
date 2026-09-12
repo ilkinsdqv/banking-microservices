@@ -2,12 +2,12 @@ package az.texnoera.bank.auditservice.audit.service.impl;
 
 import az.texnoera.bank.auditservice.audit.dto.request.CreateAuditLogRequest;
 import az.texnoera.bank.auditservice.audit.dto.response.AuditLogResponse;
-import az.texnoera.bank.auditservice.audit.entity.AuditAction;
 import az.texnoera.bank.auditservice.audit.entity.AuditLog;
 import az.texnoera.bank.auditservice.audit.exception.AuditLogNotFoundException;
 import az.texnoera.bank.auditservice.audit.mapper.AuditLogMapper;
 import az.texnoera.bank.auditservice.audit.repository.AuditLogRepository;
 import az.texnoera.bank.auditservice.audit.service.AuditLogService;
+import az.texnoera.bank.common.audit.AuditAction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
