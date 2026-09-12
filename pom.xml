@@ -46,7 +46,7 @@
 
         <module>complaint-service</module>
 
-        <!--        <module>audit-service</module>-->
+        <module>audit-service</module>
 
     </modules>
 
