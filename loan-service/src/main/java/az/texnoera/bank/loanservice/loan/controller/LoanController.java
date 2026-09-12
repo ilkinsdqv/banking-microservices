@@ -1,6 +1,7 @@
 package az.texnoera.bank.loanservice.loan.controller;
 
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
+import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 import az.texnoera.bank.loanservice.loan.service.LoanService;
 import jakarta.validation.Valid;
@@ -142,6 +143,20 @@ public class LoanController {
                         id,
                         amount
                 )
+        );
+    }
+
+    @GetMapping("/{id}/payments")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@loanSecurityService.isOwner(authentication, #id)"
+    )
+    public ResponseEntity<List<LoanPaymentResponse>> getPaymentHistory(
+            @PathVariable UUID id
+    ) {
+
+        return ResponseEntity.ok(
+                loanService.getPaymentHistory(id)
         );
     }
 }

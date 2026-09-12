@@ -24,4 +24,10 @@ public interface AccountClient {
             @PathVariable UUID id,
             @RequestBody BalanceOperationRequest request
     );
+
+    @PostMapping("/api/v1/accounts/{id}/withdraw")
+    AccountResponse withdraw(
+            @PathVariable UUID id,
+            @RequestBody BalanceOperationRequest request
+    );
 }

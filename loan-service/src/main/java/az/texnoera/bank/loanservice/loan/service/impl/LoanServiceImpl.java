@@ -4,11 +4,16 @@ import az.texnoera.bank.loanservice.client.AccountClient;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
 import az.texnoera.bank.loanservice.loan.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
+import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 import az.texnoera.bank.loanservice.loan.entity.Loan;
+import az.texnoera.bank.loanservice.loan.entity.LoanPayment;
+import az.texnoera.bank.loanservice.loan.entity.LoanPaymentStatus;
 import az.texnoera.bank.loanservice.loan.entity.LoanStatus;
 import az.texnoera.bank.loanservice.loan.exception.LoanNotFoundException;
 import az.texnoera.bank.loanservice.loan.mapper.LoanMapper;
+import az.texnoera.bank.loanservice.loan.mapper.LoanPaymentMapper;
+import az.texnoera.bank.loanservice.loan.repository.LoanPaymentRepository;
 import az.texnoera.bank.loanservice.loan.repository.LoanRepository;
 import az.texnoera.bank.loanservice.loan.service.LoanService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +31,8 @@ public class LoanServiceImpl implements LoanService {
 
     private final LoanRepository loanRepository;
     private final LoanMapper loanMapper;
+    private final LoanPaymentRepository loanPaymentRepository;
+    private final LoanPaymentMapper loanPaymentMapper;
     private final AccountClient accountClient;
 
     @Override
@@ -175,7 +182,31 @@ public class LoanServiceImpl implements LoanService {
 
         Loan loan = getEntity(id);
 
+        AccountResponse account =
+                accountClient.getAccountById(
+                        loan.getAccountId()
+                );
+
+        validateCurrency(
+                account,
+                loan.getCurrency().name()
+        );
+
+        accountClient.withdraw(
+                loan.getAccountId(),
+                new BalanceOperationRequest(amount)
+        );
+
         loan.makePayment(amount);
+
+        LoanPayment payment = new LoanPayment(
+                loan.getId(),
+                amount,
+                loan.getRemainingAmount(),
+                LoanPaymentStatus.COMPLETED
+        );
+
+        loanPaymentRepository.save(payment);
 
         return loanMapper.toResponse(loan);
     }
@@ -254,5 +285,20 @@ public class LoanServiceImpl implements LoanService {
                         4,
                         RoundingMode.HALF_UP
                 );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LoanPaymentResponse> getPaymentHistory(
+            UUID loanId
+    ) {
+
+        getEntity(loanId);
+
+        return loanPaymentRepository
+                .findAllByLoanIdOrderByCreatedAtDesc(loanId)
+                .stream()
+                .map(loanPaymentMapper::toResponse)
+                .toList();
     }
 }

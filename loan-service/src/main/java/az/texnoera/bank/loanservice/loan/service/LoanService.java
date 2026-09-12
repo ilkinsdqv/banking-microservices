@@ -1,6 +1,7 @@
 package az.texnoera.bank.loanservice.loan.service;
 
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
+import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 
 import java.util.List;
@@ -30,5 +31,9 @@ public interface LoanService {
     LoanResponse makePayment(
             UUID id,
             java.math.BigDecimal amount
+    );
+
+    List<LoanPaymentResponse> getPaymentHistory(
+            UUID loanId
     );
 }
