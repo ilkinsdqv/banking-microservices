@@ -5,6 +5,7 @@ import az.texnoera.bank.transactionservice.transaction.dto.request.CreateLoanPay
 import az.texnoera.bank.transactionservice.transaction.dto.request.CreateTransactionRequest;
 import az.texnoera.bank.transactionservice.transaction.dto.response.TransactionResponse;
 import az.texnoera.bank.transactionservice.transaction.service.TransactionService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(
             Authentication authentication,
+            HttpServletRequest httpRequest,
             @Valid @RequestBody CreateTransactionRequest request
     ) {
         UUID userId = (UUID) authentication.getPrincipal();
@@ -35,7 +37,8 @@ public class TransactionController {
                 .body(
                         transactionService.createTransaction(
                                 userId,
-                                request
+                                request,
+                                getClientIpAddress(httpRequest)
                         )
                 );
     }
@@ -72,7 +75,8 @@ public class TransactionController {
     @PostMapping("/internal/loan-payment")
     @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     public ResponseEntity<TransactionResponse> createLoanPayment(
-            @Valid @RequestBody CreateLoanPaymentRequest request
+            @Valid @RequestBody CreateLoanPaymentRequest request,
+            HttpServletRequest httpRequest
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -81,14 +85,16 @@ public class TransactionController {
                         request.accountId(),
                         request.amount(),
                         request.currency(),
-                        request.description()
+                        request.description(),
+                        getClientIpAddress(httpRequest)
                 ));
     }
 
     @PostMapping("/internal/loan-disbursement")
     @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     public ResponseEntity<TransactionResponse> createLoanDisbursement(
-            @Valid @RequestBody CreateLoanDisbursementRequest request
+            @Valid @RequestBody CreateLoanDisbursementRequest request,
+            HttpServletRequest httpRequest
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -97,7 +103,19 @@ public class TransactionController {
                         request.accountId(),
                         request.amount(),
                         request.currency(),
-                        request.description()
+                        request.description(),
+                        getClientIpAddress(httpRequest)
                 ));
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }

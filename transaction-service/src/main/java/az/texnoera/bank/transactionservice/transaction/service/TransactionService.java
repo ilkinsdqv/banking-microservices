@@ -12,7 +12,8 @@ public interface TransactionService {
 
     TransactionResponse createTransaction(
             UUID userId,
-            CreateTransactionRequest request
+            CreateTransactionRequest request,
+            String ipAddress
     );
 
     TransactionResponse getTransactionById(UUID id);
@@ -26,7 +27,8 @@ public interface TransactionService {
             UUID accountId,
             BigDecimal amount,
             Currency currency,
-            String description
+            String description,
+            String ipAddress
     );
 
     TransactionResponse createLoanDisbursement(
@@ -34,6 +36,7 @@ public interface TransactionService {
             UUID accountId,
             BigDecimal amount,
             Currency currency,
-            String description
+            String description,
+            String ipAddress
     );
 }

@@ -1,5 +1,8 @@
 package az.texnoera.bank.transactionservice.transaction.service.impl;
 
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
+import az.texnoera.bank.transactionservice.audit.AuditEventPublisher;
 import az.texnoera.bank.transactionservice.client.AccountClient;
 import az.texnoera.bank.transactionservice.client.dto.AccountResponse;
 import az.texnoera.bank.transactionservice.transaction.dto.request.BalanceOperationRequest;
@@ -29,20 +32,22 @@ public class TransactionServiceImpl
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final AccountClient accountClient;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
     @Transactional
     public TransactionResponse createTransaction(
             UUID userId,
-            CreateTransactionRequest request
+            CreateTransactionRequest request,
+            String ipAddress
     ) {
 
         validateTransactionType(request);
 
         return switch (request.type()) {
-            case DEPOSIT -> processDeposit(userId, request);
-            case WITHDRAW -> processWithdraw(userId, request);
-            case TRANSFER -> processTransfer(userId, request);
+            case DEPOSIT -> processDeposit(userId, request, ipAddress);
+            case WITHDRAW -> processWithdraw(userId, request, ipAddress);
+            case TRANSFER -> processTransfer(userId, request, ipAddress);
             case LOAN_DISBURSEMENT ->
                     throw new IllegalArgumentException(
                             "Loan disbursement must use internal endpoint"
@@ -57,9 +62,12 @@ public class TransactionServiceImpl
             UUID accountId,
             BigDecimal amount,
             Currency currency,
-            String description
+            String description,
+            String ipAddress
     ) {
-        AccountResponse account = accountClient.getAccountById(accountId);
+
+        AccountResponse account =
+                accountClient.getAccountById(accountId);
 
         if (!account.userId().equals(userId)) {
             throw new IllegalArgumentException(
@@ -88,9 +96,22 @@ public class TransactionServiceImpl
                 description
         );
 
-        return transactionMapper.toResponse(
-                transactionRepository.save(transaction)
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.LOAN_PAYMENT,
+                "TRANSACTION",
+                savedTransaction.getId(),
+                description != null
+                        ? description
+                        : "Loan payment",
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     @Override
@@ -100,9 +121,12 @@ public class TransactionServiceImpl
             UUID accountId,
             BigDecimal amount,
             Currency currency,
-            String description
+            String description,
+            String ipAddress
     ) {
-        AccountResponse account = accountClient.getAccountById(accountId);
+
+        AccountResponse account =
+                accountClient.getAccountById(accountId);
 
         if (!account.userId().equals(userId)) {
             throw new IllegalArgumentException(
@@ -131,14 +155,28 @@ public class TransactionServiceImpl
                 description
         );
 
-        return transactionMapper.toResponse(
-                transactionRepository.save(transaction)
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.LOAN_ACTIVATED,
+                "TRANSACTION",
+                savedTransaction.getId(),
+                description != null
+                        ? description
+                        : "Loan disbursement",
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     private TransactionResponse processDeposit(
             UUID userId,
-            CreateTransactionRequest request
+            CreateTransactionRequest request,
+            String ipAddress
     ) {
 
         AccountResponse account =
@@ -164,14 +202,28 @@ public class TransactionServiceImpl
                 request.description()
         );
 
-        return transactionMapper.toResponse(
-                transactionRepository.save(transaction)
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.MONEY_DEPOSITED,
+                "TRANSACTION",
+                savedTransaction.getId(),
+                request.description() != null
+                        ? request.description()
+                        : "Money deposited",
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     private TransactionResponse processWithdraw(
             UUID userId,
-            CreateTransactionRequest request
+            CreateTransactionRequest request,
+            String ipAddress
     ) {
 
         AccountResponse account =
@@ -197,14 +249,28 @@ public class TransactionServiceImpl
                 request.description()
         );
 
-        return transactionMapper.toResponse(
-                transactionRepository.save(transaction)
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.MONEY_WITHDRAWN,
+                "TRANSACTION",
+                savedTransaction.getId(),
+                request.description() != null
+                        ? request.description()
+                        : "Money withdrawn",
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     private TransactionResponse processTransfer(
             UUID userId,
-            CreateTransactionRequest request
+            CreateTransactionRequest request,
+            String ipAddress
     ) {
 
         AccountResponse sourceAccount =
@@ -268,13 +334,16 @@ public class TransactionServiceImpl
             } catch (Exception depositException) {
 
                 try {
+
                     accountClient.deposit(
                             sourceAccount.id(),
                             new BalanceOperationRequest(
                                     request.amount()
                             )
                     );
+
                 } catch (Exception compensationException) {
+
                     depositException.addSuppressed(
                             compensationException
                     );
@@ -287,10 +356,24 @@ public class TransactionServiceImpl
             }
 
             savedTransaction.complete();
-            transactionRepository.save(savedTransaction);
+
+            Transaction completedTransaction =
+                    transactionRepository.save(savedTransaction);
+
+            auditEventPublisher.publish(
+                    userId,
+                    AuditAction.MONEY_TRANSFERRED,
+                    "TRANSACTION",
+                    completedTransaction.getId(),
+                    request.description() != null
+                            ? request.description()
+                            : "Money transferred",
+                    AuditStatus.SUCCESS,
+                    ipAddress
+            );
 
             return transactionMapper.toResponse(
-                    savedTransaction
+                    completedTransaction
             );
 
         } catch (Exception exception) {
@@ -311,6 +394,7 @@ public class TransactionServiceImpl
         case DEPOSIT -> {
             if (request.toAccountId() == null ||
                     request.fromAccountId() != null) {
+
                 throw new IllegalArgumentException(
                         "DEPOSIT requires only toAccountId"
                 );
@@ -320,6 +404,7 @@ public class TransactionServiceImpl
         case WITHDRAW -> {
             if (request.fromAccountId() == null ||
                     request.toAccountId() != null) {
+
                 throw new IllegalArgumentException(
                         "WITHDRAW requires only fromAccountId"
                 );
@@ -329,11 +414,17 @@ public class TransactionServiceImpl
         case TRANSFER -> {
             if (request.fromAccountId() == null ||
                     request.toAccountId() == null) {
+
                 throw new IllegalArgumentException(
                         "TRANSFER requires both account IDs"
                 );
             }
         }
+
+        case LOAN_DISBURSEMENT ->
+                throw new IllegalArgumentException(
+                        "Loan disbursement must use internal endpoint"
+                );
         }
     }
 
@@ -341,6 +432,7 @@ public class TransactionServiceImpl
             AccountResponse account,
             UUID userId
     ) {
+
         if (!account.userId().equals(userId)) {
             throw new IllegalArgumentException(
                     "Account does not belong to current user"
@@ -352,6 +444,7 @@ public class TransactionServiceImpl
             AccountResponse account,
             Currency currency
     ) {
+
         if (!account.currency().equals(currency.name())) {
             throw new IllegalArgumentException(
                     "Account currency does not match transaction currency"
