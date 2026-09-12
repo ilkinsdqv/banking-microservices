@@ -1,7 +1,10 @@
 package az.texnoera.bank.loanservice.loan.service.impl;
 
 import az.texnoera.bank.loanservice.client.AccountClient;
+import az.texnoera.bank.loanservice.client.TransactionClient;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
+import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
+import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
 import az.texnoera.bank.loanservice.loan.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
@@ -33,6 +36,7 @@ public class LoanServiceImpl implements LoanService {
     private final LoanMapper loanMapper;
     private final LoanPaymentRepository loanPaymentRepository;
     private final LoanPaymentMapper loanPaymentMapper;
+    private final TransactionClient transactionClient;
     private final AccountClient accountClient;
 
     @Override
@@ -175,27 +179,25 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional
-    public LoanResponse makePayment(
-            UUID id,
-            BigDecimal amount
-    ) {
-
+    public LoanResponse makePayment(UUID id, BigDecimal amount) {
         Loan loan = getEntity(id);
 
-        AccountResponse account =
-                accountClient.getAccountById(
-                        loan.getAccountId()
+        TransactionResponse transaction =
+                transactionClient.createLoanPayment(
+                        new CreateLoanPaymentRequest(
+                                loan.getUserId(),
+                                loan.getAccountId(),
+                                amount,
+                                loan.getCurrency(),
+                                "Loan payment: " + loan.getId()
+                        )
                 );
 
-        validateCurrency(
-                account,
-                loan.getCurrency().name()
-        );
-
-        accountClient.withdraw(
-                loan.getAccountId(),
-                new BalanceOperationRequest(amount)
-        );
+        if (!"COMPLETED".equals(transaction.status())) {
+            throw new IllegalStateException(
+                    "Loan payment transaction failed"
+            );
+        }
 
         loan.makePayment(amount);
 
