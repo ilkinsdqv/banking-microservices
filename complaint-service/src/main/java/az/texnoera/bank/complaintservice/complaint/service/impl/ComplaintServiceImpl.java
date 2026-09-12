@@ -1,5 +1,6 @@
 package az.texnoera.bank.complaintservice.complaint.service.impl;
 
+import az.texnoera.bank.complaintservice.client.UserClient;
 import az.texnoera.bank.complaintservice.complaint.dto.request.CreateComplaintRequest;
 import az.texnoera.bank.complaintservice.complaint.dto.request.ResolveComplaintRequest;
 import az.texnoera.bank.complaintservice.complaint.dto.response.ComplaintResponse;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
+    private final UserClient userClient;
     private final ComplaintMapper complaintMapper;
 
     @Override
@@ -29,6 +31,14 @@ public class ComplaintServiceImpl implements ComplaintService {
             UUID userId,
             CreateComplaintRequest request
     ) {
+        Boolean exists = userClient.userExists(userId);
+
+        if (!Boolean.TRUE.equals(exists)) {
+            throw new IllegalArgumentException(
+                    "User not found with id: " + userId
+            );
+        }
+
         Complaint complaint = new Complaint(
                 userId,
                 request.subject(),
