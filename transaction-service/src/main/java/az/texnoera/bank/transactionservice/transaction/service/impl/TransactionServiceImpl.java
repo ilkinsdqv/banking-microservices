@@ -43,6 +43,10 @@ public class TransactionServiceImpl
             case DEPOSIT -> processDeposit(userId, request);
             case WITHDRAW -> processWithdraw(userId, request);
             case TRANSFER -> processTransfer(userId, request);
+            case LOAN_DISBURSEMENT ->
+                    throw new IllegalArgumentException(
+                            "Loan disbursement must use internal endpoint"
+                    );
         };
     }
 
@@ -80,6 +84,49 @@ public class TransactionServiceImpl
                 amount,
                 currency,
                 TransactionType.WITHDRAW,
+                TransactionStatus.COMPLETED,
+                description
+        );
+
+        return transactionMapper.toResponse(
+                transactionRepository.save(transaction)
+        );
+    }
+
+    @Override
+    @Transactional
+    public TransactionResponse createLoanDisbursement(
+            UUID userId,
+            UUID accountId,
+            BigDecimal amount,
+            Currency currency,
+            String description
+    ) {
+        AccountResponse account = accountClient.getAccountById(accountId);
+
+        if (!account.userId().equals(userId)) {
+            throw new IllegalArgumentException(
+                    "Account does not belong to user"
+            );
+        }
+
+        if (!account.currency().equals(currency.name())) {
+            throw new IllegalArgumentException(
+                    "Account currency does not match transaction currency"
+            );
+        }
+
+        accountClient.deposit(
+                accountId,
+                new BalanceOperationRequest(amount)
+        );
+
+        Transaction transaction = new Transaction(
+                null,
+                accountId,
+                amount,
+                currency,
+                TransactionType.LOAN_DISBURSEMENT,
                 TransactionStatus.COMPLETED,
                 description
         );

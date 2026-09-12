@@ -28,4 +28,12 @@ public interface TransactionService {
             Currency currency,
             String description
     );
+
+    TransactionResponse createLoanDisbursement(
+            UUID userId,
+            UUID accountId,
+            BigDecimal amount,
+            Currency currency,
+            String description
+    );
 }

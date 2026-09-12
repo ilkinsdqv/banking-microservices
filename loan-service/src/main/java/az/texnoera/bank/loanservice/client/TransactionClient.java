@@ -1,6 +1,7 @@
 package az.texnoera.bank.loanservice.client;
 
 import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
+import az.texnoera.bank.loanservice.client.dto.CreateLoanDisbursementRequest;
 import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
 import az.texnoera.bank.loanservice.config.FeignSecurityConfig;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -16,5 +17,10 @@ public interface TransactionClient {
     @PostMapping("/api/v1/transactions/internal/loan-payment")
     TransactionResponse createLoanPayment(
             @RequestBody CreateLoanPaymentRequest request
+    );
+
+    @PostMapping("/api/v1/transactions/internal/loan-disbursement")
+    TransactionResponse createLoanDisbursement(
+            @RequestBody CreateLoanDisbursementRequest request
     );
 }

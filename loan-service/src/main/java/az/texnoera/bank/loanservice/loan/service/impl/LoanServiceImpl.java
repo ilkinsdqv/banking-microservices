@@ -3,6 +3,7 @@ package az.texnoera.bank.loanservice.loan.service.impl;
 import az.texnoera.bank.loanservice.client.AccountClient;
 import az.texnoera.bank.loanservice.client.TransactionClient;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
+import az.texnoera.bank.loanservice.client.dto.CreateLoanDisbursementRequest;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
 import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
 import az.texnoera.bank.loanservice.loan.dto.request.BalanceOperationRequest;
@@ -141,25 +142,32 @@ public class LoanServiceImpl implements LoanService {
     @Override
     @Transactional
     public LoanResponse activateLoan(UUID id) {
-
         Loan loan = getEntity(id);
 
         AccountResponse account =
-                accountClient.getAccountById(
-                        loan.getAccountId()
-                );
+                accountClient.getAccountById(loan.getAccountId());
 
         validateCurrency(
                 account,
                 loan.getCurrency().name()
         );
 
-        accountClient.deposit(
-                loan.getAccountId(),
-                new BalanceOperationRequest(
-                        loan.getPrincipalAmount()
-                )
-        );
+        TransactionResponse transaction =
+                transactionClient.createLoanDisbursement(
+                        new CreateLoanDisbursementRequest(
+                                loan.getUserId(),
+                                loan.getAccountId(),
+                                loan.getPrincipalAmount(),
+                                loan.getCurrency(),
+                                "Loan disbursement: " + loan.getId()
+                        )
+                );
+
+        if (!"COMPLETED".equals(transaction.status())) {
+            throw new IllegalStateException(
+                    "Loan disbursement transaction failed"
+            );
+        }
 
         loan.activate();
 
