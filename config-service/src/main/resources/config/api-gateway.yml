@@ -37,6 +37,11 @@ spring:
               predicates:
                 - Path=/api/v1/complaints/**
 
+            - id: audit-service
+              uri: lb://AUDIT-SERVICE
+              predicates:
+                - Path=/api/v1/audits/**
+
 server:
   port: 8080
 
