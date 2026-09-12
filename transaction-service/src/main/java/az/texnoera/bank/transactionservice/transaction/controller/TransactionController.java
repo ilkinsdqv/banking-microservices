@@ -1,5 +1,6 @@
 package az.texnoera.bank.transactionservice.transaction.controller;
 
+import az.texnoera.bank.transactionservice.transaction.dto.request.CreateLoanPaymentRequest;
 import az.texnoera.bank.transactionservice.transaction.dto.request.CreateTransactionRequest;
 import az.texnoera.bank.transactionservice.transaction.dto.response.TransactionResponse;
 import az.texnoera.bank.transactionservice.transaction.service.TransactionService;
@@ -65,5 +66,21 @@ public class TransactionController {
                         accountId
                 )
         );
+    }
+
+    @PostMapping("/internal/loan-payment")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<TransactionResponse> createLoanPayment(
+            @Valid @RequestBody CreateLoanPaymentRequest request
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(transactionService.createLoanPayment(
+                        request.userId(),
+                        request.accountId(),
+                        request.amount(),
+                        request.currency(),
+                        request.description()
+                ));
     }
 }

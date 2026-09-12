@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +44,49 @@ public class TransactionServiceImpl
             case WITHDRAW -> processWithdraw(userId, request);
             case TRANSFER -> processTransfer(userId, request);
         };
+    }
+
+    @Override
+    @Transactional
+    public TransactionResponse createLoanPayment(
+            UUID userId,
+            UUID accountId,
+            BigDecimal amount,
+            Currency currency,
+            String description
+    ) {
+        AccountResponse account = accountClient.getAccountById(accountId);
+
+        if (!account.userId().equals(userId)) {
+            throw new IllegalArgumentException(
+                    "Account does not belong to user"
+            );
+        }
+
+        if (!account.currency().equals(currency.name())) {
+            throw new IllegalArgumentException(
+                    "Account currency does not match transaction currency"
+            );
+        }
+
+        accountClient.withdraw(
+                accountId,
+                new BalanceOperationRequest(amount)
+        );
+
+        Transaction transaction = new Transaction(
+                accountId,
+                null,
+                amount,
+                currency,
+                TransactionType.WITHDRAW,
+                TransactionStatus.COMPLETED,
+                description
+        );
+
+        return transactionMapper.toResponse(
+                transactionRepository.save(transaction)
+        );
     }
 
     private TransactionResponse processDeposit(
