@@ -1,11 +1,7 @@
 package az.texnoera.bank.loanservice.loan.entity;
 
 import az.texnoera.bank.common.persistence.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -71,76 +67,64 @@ public class Loan extends BaseEntity {
     }
 
     public void approve() {
-        if (this.status != LoanStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Only pending loans can be approved"
-            );
-        }
+        requireStatus(LoanStatus.PENDING);
 
-        this.status = LoanStatus.APPROVED;
+        status = LoanStatus.APPROVED;
     }
 
     public void reject() {
-        if (this.status != LoanStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Only pending loans can be rejected"
-            );
-        }
+        requireStatus(LoanStatus.PENDING);
 
-        this.status = LoanStatus.REJECTED;
+        status = LoanStatus.REJECTED;
     }
 
     public void activate() {
-        if (this.status != LoanStatus.APPROVED) {
-            throw new IllegalStateException(
-                    "Only approved loans can be activated"
-            );
-        }
+        requireStatus(LoanStatus.APPROVED);
 
-        this.status = LoanStatus.ACTIVE;
+        status = LoanStatus.ACTIVE;
     }
 
     public void cancel() {
-        if (this.status != LoanStatus.PENDING) {
+        if (status != LoanStatus.PENDING && status != LoanStatus.APPROVED) {
             throw new IllegalStateException(
-                    "Only pending loans can be cancelled"
+                    "Only pending or approved loans can be cancelled"
             );
         }
 
-        this.status = LoanStatus.CANCELLED;
+        status = LoanStatus.CANCELLED;
     }
 
     public void makePayment(BigDecimal amount) {
-
         validatePositiveAmount(amount);
 
-        if (this.status != LoanStatus.ACTIVE) {
-            throw new IllegalStateException(
-                    "Payments can only be made for active loans"
-            );
-        }
+        requireStatus(LoanStatus.ACTIVE);
 
-        if (amount.compareTo(this.remainingAmount) > 0) {
+        if (amount.compareTo(remainingAmount) > 0) {
             throw new IllegalArgumentException(
-                    "Payment cannot exceed remaining loan amount"
+                    "Payment amount cannot exceed remaining loan amount"
             );
         }
 
-        this.remainingAmount =
-                this.remainingAmount.subtract(amount);
+        remainingAmount = remainingAmount.subtract(amount);
 
-        if (this.remainingAmount.compareTo(BigDecimal.ZERO) == 0) {
-            this.status = LoanStatus.PAID;
+        if (remainingAmount.compareTo(BigDecimal.ZERO) == 0) {
+            status = LoanStatus.PAID;
+        }
+    }
+
+    private void requireStatus(LoanStatus expectedStatus) {
+        if (status != expectedStatus) {
+            throw new IllegalStateException(
+                    "Loan must be in " + expectedStatus +
+                            " status but is " + status
+            );
         }
     }
 
     private void validatePositiveAmount(BigDecimal amount) {
-
-        if (amount == null ||
-                amount.compareTo(BigDecimal.ZERO) <= 0) {
-
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(
-                    "Amount must be greater than zero"
+                    "Payment amount must be greater than zero"
             );
         }
     }
