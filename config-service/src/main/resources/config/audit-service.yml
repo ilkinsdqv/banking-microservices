@@ -15,13 +15,12 @@ spring:
   flyway:
     enabled: true
 
-  spring:
-    kafka:
-      bootstrap-servers: localhost:9092
-      consumer:
-        group-id: audit-service
-        auto-offset-reset: earliest
-        enable-auto-commit: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: audit-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
 
 server:
   port: 8090
