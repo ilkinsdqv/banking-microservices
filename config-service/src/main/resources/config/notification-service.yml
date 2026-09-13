@@ -3,8 +3,8 @@ spring:
     name: notification-service
 
   mail:
-    host: localhost
-    port: 1025
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
     properties:
       mail:
         smtp:
@@ -17,11 +17,11 @@ server:
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
     prefer-ip-address: true
 
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
     register-with-eureka: true
     fetch-registry: true
