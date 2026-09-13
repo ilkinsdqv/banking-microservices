@@ -11,14 +11,22 @@ public interface AccountService {
 
     AccountResponse createAccount(
             UUID userId,
-            CreateAccountRequest request
+            CreateAccountRequest request,
+            String ipAddress
     );
 
     AccountResponse getAccountById(UUID id);
 
     List<AccountResponse> getAccountsByUserId(UUID userId);
 
-    AccountResponse deposit(UUID accountId, BigDecimal amount);
-
-    AccountResponse withdraw(UUID accountId, BigDecimal amount);
+    AccountResponse deposit(
+            UUID accountId,
+            BigDecimal amount,
+            String ipAddress
+    );
+    AccountResponse withdraw(
+            UUID accountId,
+            BigDecimal amount,
+            String ipAddress
+    );
 }

@@ -8,7 +8,10 @@ import az.texnoera.bank.accountservice.account.mapper.AccountMapper;
 import az.texnoera.bank.accountservice.account.repository.AccountRepository;
 import az.texnoera.bank.accountservice.account.service.AccountService;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
+import az.texnoera.bank.accountservice.audit.AuditEventPublisher;
 import az.texnoera.bank.accountservice.client.UserClient;
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,16 +25,23 @@ import java.util.UUID;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
+    private final AuditEventPublisher auditEventPublisher;
     private final AccountMapper accountMapper;
     private final IbanGenerator ibanGenerator;
     private final UserClient userClient;
 
     @Override
     @Transactional
-    public AccountResponse createAccount(UUID userId, CreateAccountRequest request) {
+    public AccountResponse createAccount(
+            UUID userId,
+            CreateAccountRequest request,
+            String ipAddress
+    ) {
 
         if (!userClient.userExists(userId)) {
-            throw new IllegalArgumentException("User not found with id: " + userId);
+            throw new IllegalArgumentException(
+                    "User not found with id: " + userId
+            );
         }
 
         String iban;
@@ -49,6 +59,16 @@ public class AccountServiceImpl implements AccountService {
         );
 
         Account savedAccount = accountRepository.save(account);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.ACCOUNT_CREATED,
+                "ACCOUNT",
+                savedAccount.getId(),
+                "Account created: " + savedAccount.getIban(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return accountMapper.toResponse(savedAccount);
     }
@@ -79,7 +99,8 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountResponse deposit(
             UUID accountId,
-            BigDecimal amount
+            BigDecimal amount,
+            String ipAddress
     ) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
@@ -88,6 +109,16 @@ public class AccountServiceImpl implements AccountService {
 
         account.deposit(amount);
 
+        auditEventPublisher.publish(
+                account.getUserId(),
+                AuditAction.MONEY_DEPOSITED,
+                "ACCOUNT",
+                account.getId(),
+                "Money deposited",
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
         return accountMapper.toResponse(account);
     }
 
@@ -95,7 +126,8 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountResponse withdraw(
             UUID accountId,
-            BigDecimal amount
+            BigDecimal amount,
+            String ipAddress
     ) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
@@ -103,6 +135,16 @@ public class AccountServiceImpl implements AccountService {
                 );
 
         account.withdraw(amount);
+
+        auditEventPublisher.publish(
+                account.getUserId(),
+                AuditAction.MONEY_WITHDRAWN,
+                "ACCOUNT",
+                account.getId(),
+                "Money withdrawn",
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return accountMapper.toResponse(account);
     }
