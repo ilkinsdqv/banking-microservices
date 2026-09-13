@@ -203,5 +203,34 @@ services:
 
     restart: unless-stopped
 
+  loan-service:
+    build:
+      context: ./loan-service
+      dockerfile: Dockerfile
+    container_name: banking-loan
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loan_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+      EUREKA_INSTANCE_HOSTNAME: loan-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka
+
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+
+    depends_on:
+      - postgres
+      - kafka
+      - discovery-service
+      - config-service
+      - account-service
+      - transaction-service
+
+    restart: unless-stopped
+
 volumes:
   postgres_data:
