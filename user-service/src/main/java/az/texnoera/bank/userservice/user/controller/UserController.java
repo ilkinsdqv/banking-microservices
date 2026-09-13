@@ -135,6 +135,7 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     @GetMapping("/authentication")
     public UserAuthResponse getUserForAuthentication(
             @RequestParam String email
@@ -142,6 +143,7 @@ public class UserController {
         return userService.getUserForAuthentication(email);
     }
 
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     @GetMapping("/authentication/{id}")
     public UserAuthResponse getUserForAuthenticationById(
             @PathVariable UUID id

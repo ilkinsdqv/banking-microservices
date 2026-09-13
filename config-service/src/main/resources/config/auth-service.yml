@@ -20,6 +20,9 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 900000
 
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
 eureka:
   instance:
     hostname: localhost

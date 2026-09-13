@@ -1,5 +1,6 @@
 package az.texnoera.bank.authservice.client;
 
+import az.texnoera.bank.authservice.config.FeignSecurityConfig;
 import az.texnoera.bank.authservice.dto.response.UserAuthResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,7 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
-@FeignClient(name = "user-service")
+@FeignClient(
+        name = "user-service",
+        configuration = FeignSecurityConfig.class
+)
 public interface UserClient {
 
     @GetMapping("/api/v1/users/authentication")
