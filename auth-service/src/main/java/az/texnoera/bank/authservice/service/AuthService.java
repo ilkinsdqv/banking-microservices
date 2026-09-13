@@ -6,7 +6,10 @@ import az.texnoera.bank.authservice.dto.response.LoginResponse;
 
 public interface AuthService {
 
-    LoginResponse login(LoginRequest request);
+    LoginResponse login(
+            LoginRequest request,
+            String ipAddress
+    );
     LoginResponse refreshToken(RefreshTokenRequest request);
     void logout(String refreshToken);
 }

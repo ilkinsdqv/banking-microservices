@@ -1,5 +1,6 @@
 package az.texnoera.bank.authservice.service.impl;
 
+import az.texnoera.bank.authservice.audit.AuditEventPublisher;
 import az.texnoera.bank.authservice.client.UserClient;
 import az.texnoera.bank.authservice.dto.request.LoginRequest;
 import az.texnoera.bank.authservice.dto.request.RefreshTokenRequest;
@@ -10,6 +11,8 @@ import az.texnoera.bank.authservice.security.JwtProperties;
 import az.texnoera.bank.authservice.security.JwtService;
 import az.texnoera.bank.authservice.service.AuthService;
 import az.texnoera.bank.authservice.service.RefreshTokenService;
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,9 +26,13 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final RefreshTokenService refreshTokenService;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(
+            LoginRequest request,
+            String ipAddress
+    ) {
 
         UserAuthResponse user =
                 userClient.getUserForAuthentication(request.email());
@@ -56,6 +63,16 @@ public class AuthServiceImpl implements AuthService {
 
         RefreshToken refreshToken =
                 refreshTokenService.createRefreshToken(user.id());
+
+        auditEventPublisher.publish(
+                user.id(),
+                AuditAction.USER_LOGIN,
+                "USER",
+                user.id(),
+                "User login successful",
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return new LoginResponse(
                 accessToken,

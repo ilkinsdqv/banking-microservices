@@ -4,6 +4,7 @@ import az.texnoera.bank.authservice.dto.request.LoginRequest;
 import az.texnoera.bank.authservice.dto.request.RefreshTokenRequest;
 import az.texnoera.bank.authservice.dto.response.LoginResponse;
 import az.texnoera.bank.authservice.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public LoginResponse login(
+            HttpServletRequest httpRequest,
             @Valid @RequestBody LoginRequest request
     ) {
-        return authService.login(request);
+        return authService.login(
+                request,
+                getClientIpAddress(httpRequest)
+        );
     }
 
     @PostMapping("/refresh")
@@ -36,5 +41,18 @@ public class AuthController {
             @Valid @RequestBody RefreshTokenRequest request
     ) {
         authService.logout(request.refreshToken());
+    }
+
+    private String getClientIpAddress(
+            HttpServletRequest request
+    ) {
+        String forwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
