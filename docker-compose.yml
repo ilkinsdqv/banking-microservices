@@ -4,8 +4,8 @@ services:
     image: postgres:17
     container_name: banking-postgres
     environment:
-      POSTGRES_USER: bank_user
-      POSTGRES_PASSWORD: bank_password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: banking_db
     ports:
       - "5432:5432"
@@ -79,9 +79,11 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: user-service
@@ -104,9 +106,11 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: auth-service
@@ -132,7 +136,7 @@ services:
     ports:
       - "8087:8087"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
@@ -155,9 +159,11 @@ services:
     ports:
       - "8084:8084"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/account_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: account-service
@@ -183,9 +189,11 @@ services:
     ports:
       - "8085:8085"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/transaction_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: transaction-service
@@ -211,9 +219,11 @@ services:
     ports:
       - "8086:8086"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loan_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: loan-service
@@ -240,9 +250,11 @@ services:
     ports:
       - "8089:8089"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/complaint_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: complaint-service
@@ -267,9 +279,11 @@ services:
     ports:
       - "8090:8090"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: audit-service
@@ -294,7 +308,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:8888
+      CONFIG_SERVER_URL: http://config-service:8888
 
       EUREKA_INSTANCE_HOSTNAME: api-gateway
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka
