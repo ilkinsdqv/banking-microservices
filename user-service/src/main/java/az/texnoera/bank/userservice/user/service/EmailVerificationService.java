@@ -6,5 +6,8 @@ public interface EmailVerificationService {
 
     String createVerificationToken(User user);
 
-    void verifyEmail(String token);
+    void verifyEmail(
+            String token,
+            String ipAddress
+    );
 }

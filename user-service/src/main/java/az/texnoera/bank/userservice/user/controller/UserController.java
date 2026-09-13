@@ -39,8 +39,14 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
-        return userService.createUser(request);
+    public UserResponse createUser(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody CreateUserRequest request
+    ) {
+        return userService.createUser(
+                request,
+                getClientIpAddress(httpRequest)
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN') or @userSecurityService.isCurrentUser(authentication, #id)")
@@ -119,8 +125,14 @@ public class UserController {
 
     @GetMapping("/email-verification/verify")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void verifyEmail(@RequestParam String token) {
-        emailVerificationService.verifyEmail(token);
+    public void verifyEmail(
+            @RequestParam String token,
+            HttpServletRequest httpRequest
+    ) {
+        emailVerificationService.verifyEmail(
+                token,
+                getClientIpAddress(httpRequest)
+        );
     }
 
     @GetMapping("/authentication")
@@ -143,5 +155,18 @@ public class UserController {
             @PathVariable UUID id
     ) {
         return ResponseEntity.ok(userService.existsById(id));
+    }
+
+    private String getClientIpAddress(
+            HttpServletRequest request
+    ) {
+        String forwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }

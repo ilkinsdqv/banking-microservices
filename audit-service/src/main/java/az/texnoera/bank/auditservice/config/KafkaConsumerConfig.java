@@ -9,7 +9,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.util.backoff.FixedBackOff;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -19,19 +25,24 @@ public class KafkaConsumerConfig {
             KafkaProperties kafkaProperties
     ) {
 
-        JsonDeserializer<AuditEvent> deserializer =
+        JsonDeserializer<AuditEvent> jsonDeserializer =
                 new JsonDeserializer<>(AuditEvent.class);
 
-        deserializer.addTrustedPackages(
+        jsonDeserializer.addTrustedPackages(
                 "az.texnoera.bank.common.audit"
         );
 
-        deserializer.setUseTypeHeaders(false);
+        jsonDeserializer.setUseTypeHeaders(false);
+
+        ErrorHandlingDeserializer<AuditEvent> valueDeserializer =
+                new ErrorHandlingDeserializer<>(
+                        jsonDeserializer
+                );
 
         return new DefaultKafkaConsumerFactory<>(
                 kafkaProperties.buildConsumerProperties(),
                 new StringDeserializer(),
-                deserializer
+                valueDeserializer
         );
     }
 
@@ -41,10 +52,20 @@ public class KafkaConsumerConfig {
             ConsumerFactory<String, AuditEvent> auditEventConsumerFactory
     ) {
 
-        ConcurrentKafkaListenerContainerFactory<String, AuditEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, AuditEvent>
+                factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
-        factory.setConsumerFactory(auditEventConsumerFactory);
+        factory.setConsumerFactory(
+                auditEventConsumerFactory
+        );
+
+        DefaultErrorHandler errorHandler =
+                new DefaultErrorHandler(
+                        new FixedBackOff(0L, 0L)
+                );
+
+        factory.setCommonErrorHandler(errorHandler);
 
         return factory;
     }
