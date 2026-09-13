@@ -5,12 +5,13 @@ import az.texnoera.bank.complaintservice.complaint.dto.request.ResolveComplaintR
 import az.texnoera.bank.complaintservice.complaint.dto.response.ComplaintResponse;
 import az.texnoera.bank.complaintservice.complaint.entity.ComplaintStatus;
 import az.texnoera.bank.complaintservice.complaint.service.ComplaintService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +27,10 @@ public class ComplaintController {
     @PostMapping
     public ResponseEntity<ComplaintResponse> createComplaint(
             Authentication authentication,
+            HttpServletRequest httpRequest,
             @Valid @RequestBody CreateComplaintRequest request
     ) {
+
         UUID userId = (UUID) authentication.getPrincipal();
 
         return ResponseEntity
@@ -35,7 +38,8 @@ public class ComplaintController {
                 .body(
                         complaintService.createComplaint(
                                 userId,
-                                request
+                                request,
+                                getClientIpAddress(httpRequest)
                         )
                 );
     }
@@ -44,6 +48,7 @@ public class ComplaintController {
     public ResponseEntity<List<ComplaintResponse>> getMyComplaints(
             Authentication authentication
     ) {
+
         UUID userId = (UUID) authentication.getPrincipal();
 
         return ResponseEntity.ok(
@@ -59,6 +64,7 @@ public class ComplaintController {
     public ResponseEntity<ComplaintResponse> getComplaintById(
             @PathVariable UUID id
     ) {
+
         return ResponseEntity.ok(
                 complaintService.getComplaintById(id)
         );
@@ -67,6 +73,7 @@ public class ComplaintController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ComplaintResponse>> getAllComplaints() {
+
         return ResponseEntity.ok(
                 complaintService.getAllComplaints()
         );
@@ -77,6 +84,7 @@ public class ComplaintController {
     public ResponseEntity<List<ComplaintResponse>> getComplaintsByStatus(
             @PathVariable ComplaintStatus status
     ) {
+
         return ResponseEntity.ok(
                 complaintService.getComplaintsByStatus(status)
         );
@@ -85,10 +93,15 @@ public class ComplaintController {
     @PostMapping("/{id}/start")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ComplaintResponse> startProcessing(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
+
         return ResponseEntity.ok(
-                complaintService.startProcessing(id)
+                complaintService.startProcessing(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
@@ -96,20 +109,45 @@ public class ComplaintController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ComplaintResponse> resolveComplaint(
             @PathVariable UUID id,
+            HttpServletRequest httpRequest,
             @Valid @RequestBody ResolveComplaintRequest request
     ) {
+
         return ResponseEntity.ok(
-                complaintService.resolveComplaint(id, request)
+                complaintService.resolveComplaint(
+                        id,
+                        request,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
     @PostMapping("/{id}/close")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ComplaintResponse> closeComplaint(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
+
         return ResponseEntity.ok(
-                complaintService.closeComplaint(id)
+                complaintService.closeComplaint(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
+    }
+
+    private String getClientIpAddress(
+            HttpServletRequest request
+    ) {
+
+        String forwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }

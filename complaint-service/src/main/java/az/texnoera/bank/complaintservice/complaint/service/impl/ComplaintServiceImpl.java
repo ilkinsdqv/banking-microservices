@@ -1,5 +1,8 @@
 package az.texnoera.bank.complaintservice.complaint.service.impl;
 
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
+import az.texnoera.bank.complaintservice.audit.AuditEventPublisher;
 import az.texnoera.bank.complaintservice.client.UserClient;
 import az.texnoera.bank.complaintservice.complaint.dto.request.CreateComplaintRequest;
 import az.texnoera.bank.complaintservice.complaint.dto.request.ResolveComplaintRequest;
@@ -24,13 +27,16 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final UserClient userClient;
     private final ComplaintMapper complaintMapper;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
     @Transactional
     public ComplaintResponse createComplaint(
             UUID userId,
-            CreateComplaintRequest request
+            CreateComplaintRequest request,
+            String ipAddress
     ) {
+
         Boolean exists = userClient.userExists(userId);
 
         if (!Boolean.TRUE.equals(exists)) {
@@ -46,14 +52,26 @@ public class ComplaintServiceImpl implements ComplaintService {
                 request.priority()
         );
 
-        return complaintMapper.toResponse(
-                complaintRepository.save(complaint)
+        Complaint savedComplaint =
+                complaintRepository.save(complaint);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.COMPLAINT_CREATED,
+                "COMPLAINT",
+                savedComplaint.getId(),
+                "Complaint created: " + savedComplaint.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return complaintMapper.toResponse(savedComplaint);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ComplaintResponse getComplaintById(UUID id) {
+
         return complaintMapper.toResponse(
                 getEntity(id)
         );
@@ -61,7 +79,10 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ComplaintResponse> getMyComplaints(UUID userId) {
+    public List<ComplaintResponse> getMyComplaints(
+            UUID userId
+    ) {
+
         return complaintRepository
                 .findAllByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -74,6 +95,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     public List<ComplaintResponse> getComplaintsByStatus(
             ComplaintStatus status
     ) {
+
         return complaintRepository
                 .findAllByStatusOrderByCreatedAtDesc(status)
                 .stream()
@@ -84,6 +106,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     @Transactional(readOnly = true)
     public List<ComplaintResponse> getAllComplaints() {
+
         return complaintRepository
                 .findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -93,10 +116,24 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     @Transactional
-    public ComplaintResponse startProcessing(UUID id) {
+    public ComplaintResponse startProcessing(
+            UUID id,
+            String ipAddress
+    ) {
+
         Complaint complaint = getEntity(id);
 
         complaint.startProcessing();
+
+        auditEventPublisher.publish(
+                complaint.getUserId(),
+                AuditAction.COMPLAINT_STARTED,
+                "COMPLAINT",
+                complaint.getId(),
+                "Complaint processing started: " + complaint.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return complaintMapper.toResponse(complaint);
     }
@@ -105,27 +142,56 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Transactional
     public ComplaintResponse resolveComplaint(
             UUID id,
-            ResolveComplaintRequest request
+            ResolveComplaintRequest request,
+            String ipAddress
     ) {
+
         Complaint complaint = getEntity(id);
 
         complaint.resolve(request.adminResponse());
+
+        auditEventPublisher.publish(
+                complaint.getUserId(),
+                AuditAction.COMPLAINT_RESOLVED,
+                "COMPLAINT",
+                complaint.getId(),
+                "Complaint resolved: " + complaint.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return complaintMapper.toResponse(complaint);
     }
 
     @Override
     @Transactional
-    public ComplaintResponse closeComplaint(UUID id) {
+    public ComplaintResponse closeComplaint(
+            UUID id,
+            String ipAddress
+    ) {
+
         Complaint complaint = getEntity(id);
 
         complaint.close();
+
+        auditEventPublisher.publish(
+                complaint.getUserId(),
+                AuditAction.COMPLAINT_CLOSED,
+                "COMPLAINT",
+                complaint.getId(),
+                "Complaint closed: " + complaint.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return complaintMapper.toResponse(complaint);
     }
 
     private Complaint getEntity(UUID id) {
+
         return complaintRepository.findById(id)
-                .orElseThrow(() -> new ComplaintNotFoundException(id));
+                .orElseThrow(() ->
+                        new ComplaintNotFoundException(id)
+                );
     }
 }

@@ -12,7 +12,8 @@ public interface ComplaintService {
 
     ComplaintResponse createComplaint(
             UUID userId,
-            CreateComplaintRequest request
+            CreateComplaintRequest request,
+            String ipAddress
     );
 
     ComplaintResponse getComplaintById(UUID id);
@@ -25,12 +26,19 @@ public interface ComplaintService {
 
     List<ComplaintResponse> getAllComplaints();
 
-    ComplaintResponse startProcessing(UUID id);
+    ComplaintResponse startProcessing(
+            UUID id,
+            String ipAddress
+    );
 
     ComplaintResponse resolveComplaint(
             UUID id,
-            ResolveComplaintRequest request
+            ResolveComplaintRequest request,
+            String ipAddress
     );
 
-    ComplaintResponse closeComplaint(UUID id);
+    ComplaintResponse closeComplaint(
+            UUID id,
+            String ipAddress
+    );
 }
