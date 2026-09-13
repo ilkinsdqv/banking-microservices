@@ -1,12 +1,14 @@
 package az.texnoera.bank.loanservice.loan.service.impl;
 
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
+import az.texnoera.bank.loanservice.audit.AuditEventPublisher;
 import az.texnoera.bank.loanservice.client.AccountClient;
 import az.texnoera.bank.loanservice.client.TransactionClient;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanDisbursementRequest;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
 import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
-import az.texnoera.bank.loanservice.loan.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
@@ -39,12 +41,14 @@ public class LoanServiceImpl implements LoanService {
     private final LoanPaymentMapper loanPaymentMapper;
     private final TransactionClient transactionClient;
     private final AccountClient accountClient;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
     @Transactional
     public LoanResponse createLoan(
             UUID userId,
-            CreateLoanRequest request
+            CreateLoanRequest request,
+            String ipAddress
     ) {
 
         AccountResponse account =
@@ -53,6 +57,7 @@ public class LoanServiceImpl implements LoanService {
                 );
 
         validateAccountOwner(account, userId);
+
         validateCurrency(
                 account,
                 request.currency().name()
@@ -77,9 +82,19 @@ public class LoanServiceImpl implements LoanService {
                 LoanStatus.PENDING
         );
 
-        return loanMapper.toResponse(
-                loanRepository.save(loan)
+        Loan savedLoan = loanRepository.save(loan);
+
+        auditEventPublisher.publish(
+                userId,
+                AuditAction.LOAN_CREATED,
+                "LOAN",
+                savedLoan.getId(),
+                "Loan created: " + savedLoan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
         );
+
+        return loanMapper.toResponse(savedLoan);
     }
 
     @Override
@@ -119,33 +134,65 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional
-    public LoanResponse approveLoan(UUID id) {
+    public LoanResponse approveLoan(
+            UUID id,
+            String ipAddress
+    ) {
 
         Loan loan = getEntity(id);
 
         loan.approve();
 
+        auditEventPublisher.publish(
+                loan.getUserId(),
+                AuditAction.LOAN_APPROVED,
+                "LOAN",
+                loan.getId(),
+                "Loan approved: " + loan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
         return loanMapper.toResponse(loan);
     }
 
     @Override
     @Transactional
-    public LoanResponse rejectLoan(UUID id) {
+    public LoanResponse rejectLoan(
+            UUID id,
+            String ipAddress
+    ) {
 
         Loan loan = getEntity(id);
 
         loan.reject();
 
+        auditEventPublisher.publish(
+                loan.getUserId(),
+                AuditAction.LOAN_REJECTED,
+                "LOAN",
+                loan.getId(),
+                "Loan rejected: " + loan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
         return loanMapper.toResponse(loan);
     }
 
     @Override
     @Transactional
-    public LoanResponse activateLoan(UUID id) {
+    public LoanResponse activateLoan(
+            UUID id,
+            String ipAddress
+    ) {
+
         Loan loan = getEntity(id);
 
         AccountResponse account =
-                accountClient.getAccountById(loan.getAccountId());
+                accountClient.getAccountById(
+                        loan.getAccountId()
+                );
 
         validateCurrency(
                 account,
@@ -171,23 +218,51 @@ public class LoanServiceImpl implements LoanService {
 
         loan.activate();
 
+        auditEventPublisher.publish(
+                loan.getUserId(),
+                AuditAction.LOAN_ACTIVATED,
+                "LOAN",
+                loan.getId(),
+                "Loan activated: " + loan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
         return loanMapper.toResponse(loan);
     }
 
     @Override
     @Transactional
-    public LoanResponse cancelLoan(UUID id) {
+    public LoanResponse cancelLoan(
+            UUID id,
+            String ipAddress
+    ) {
 
         Loan loan = getEntity(id);
 
         loan.cancel();
 
+        auditEventPublisher.publish(
+                loan.getUserId(),
+                AuditAction.LOAN_CANCELLED,
+                "LOAN",
+                loan.getId(),
+                "Loan cancelled: " + loan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
         return loanMapper.toResponse(loan);
     }
 
     @Override
     @Transactional
-    public LoanResponse makePayment(UUID id, BigDecimal amount) {
+    public LoanResponse makePayment(
+            UUID id,
+            BigDecimal amount,
+            String ipAddress
+    ) {
+
         Loan loan = getEntity(id);
 
         TransactionResponse transaction =
@@ -217,6 +292,16 @@ public class LoanServiceImpl implements LoanService {
         );
 
         loanPaymentRepository.save(payment);
+
+        auditEventPublisher.publish(
+                loan.getUserId(),
+                AuditAction.LOAN_PAYMENT,
+                "LOAN",
+                loan.getId(),
+                "Loan payment: " + amount,
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         return loanMapper.toResponse(loan);
     }

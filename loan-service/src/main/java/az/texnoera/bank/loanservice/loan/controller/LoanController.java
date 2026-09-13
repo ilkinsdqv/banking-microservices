@@ -4,6 +4,7 @@ import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 import az.texnoera.bank.loanservice.loan.service.LoanService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class LoanController {
     @PostMapping
     public ResponseEntity<LoanResponse> createLoan(
             Authentication authentication,
+            HttpServletRequest httpRequest,
             @Valid @RequestBody CreateLoanRequest request
     ) {
 
@@ -36,7 +38,8 @@ public class LoanController {
                 .body(
                         loanService.createLoan(
                                 userId,
-                                request
+                                request,
+                                getClientIpAddress(httpRequest)
                         )
                 );
     }
@@ -84,33 +87,45 @@ public class LoanController {
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LoanResponse> approveLoan(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
 
         return ResponseEntity.ok(
-                loanService.approveLoan(id)
+                loanService.approveLoan(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LoanResponse> rejectLoan(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
 
         return ResponseEntity.ok(
-                loanService.rejectLoan(id)
+                loanService.rejectLoan(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
     @PostMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LoanResponse> activateLoan(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
 
         return ResponseEntity.ok(
-                loanService.activateLoan(id)
+                loanService.activateLoan(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
@@ -120,11 +135,15 @@ public class LoanController {
                     "@loanSecurityService.isOwner(authentication, #id)"
     )
     public ResponseEntity<LoanResponse> cancelLoan(
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest
     ) {
 
         return ResponseEntity.ok(
-                loanService.cancelLoan(id)
+                loanService.cancelLoan(
+                        id,
+                        getClientIpAddress(httpRequest)
+                )
         );
     }
 
@@ -135,13 +154,15 @@ public class LoanController {
     )
     public ResponseEntity<LoanResponse> makePayment(
             @PathVariable UUID id,
-            @RequestParam BigDecimal amount
+            @RequestParam BigDecimal amount,
+            HttpServletRequest httpRequest
     ) {
 
         return ResponseEntity.ok(
                 loanService.makePayment(
                         id,
-                        amount
+                        amount,
+                        getClientIpAddress(httpRequest)
                 )
         );
     }
@@ -158,5 +179,17 @@ public class LoanController {
         return ResponseEntity.ok(
                 loanService.getPaymentHistory(id)
         );
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+
+        String forwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
