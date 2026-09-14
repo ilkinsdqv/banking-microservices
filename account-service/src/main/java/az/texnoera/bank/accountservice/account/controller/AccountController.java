@@ -89,6 +89,23 @@ public class AccountController {
         );
     }
 
+    @PostMapping("/{id}/cash-in")
+    @PreAuthorize("@accountSecurityService.isOwner(authentication, #id)")
+    public ResponseEntity<AccountResponse> cashIn(
+            @PathVariable UUID id,
+            Authentication authentication,
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody BalanceOperationRequest request
+    ) {
+        return ResponseEntity.ok(
+                accountService.cashIn(
+                        id,
+                        request.amount(),
+                        getClientIpAddress(httpRequest)
+                )
+        );
+    }
+
     @PostMapping("/{id}/withdraw")
     @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     public ResponseEntity<AccountResponse> withdraw(

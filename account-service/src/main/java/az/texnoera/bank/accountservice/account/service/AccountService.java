@@ -29,4 +29,10 @@ public interface AccountService {
             BigDecimal amount,
             String ipAddress
     );
+
+    AccountResponse cashIn(
+            UUID accountId,
+            BigDecimal amount,
+            String ipAddress
+    );
 }

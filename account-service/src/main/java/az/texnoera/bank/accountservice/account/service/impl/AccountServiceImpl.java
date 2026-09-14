@@ -124,6 +124,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    public AccountResponse cashIn(
+            UUID accountId,
+            BigDecimal amount,
+            String ipAddress
+    ) {
+        return deposit(accountId, amount, ipAddress);
+    }
+
+    @Override
+    @Transactional
     public AccountResponse withdraw(
             UUID accountId,
             BigDecimal amount,
