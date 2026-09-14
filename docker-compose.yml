@@ -1,5 +1,8 @@
 services:
 
+  # ============================================================
+  # PostgreSQL
+  # ============================================================
   postgres:
     image: postgres:17
     container_name: banking-postgres
@@ -12,8 +15,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
+
+  # ============================================================
+  # Kafka
+  # ============================================================
   kafka:
     image: apache/kafka:4.0.0
     container_name: banking-kafka
@@ -41,16 +54,41 @@ services:
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
     restart: unless-stopped
 
+
+  # ============================================================
+  # Mailpit
+  # ============================================================
   mailpit:
     image: axllent/mailpit:latest
     container_name: banking-mailpit
     ports:
       - "1025:1025"
       - "8025:8025"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8025/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
+
+  # ============================================================
+  # Discovery Service / Eureka
+  # ============================================================
   discovery-service:
     build:
       context: ./discovery-service
@@ -58,8 +96,24 @@ services:
     container_name: banking-discovery
     ports:
       - "8761:8761"
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
     restart: unless-stopped
 
+
+  # ============================================================
+  # Config Service
+  # ============================================================
   config-service:
     build:
       context: ./config-service
@@ -67,10 +121,28 @@ services:
     container_name: banking-config
     ports:
       - "8888:8888"
+
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
     restart: unless-stopped
 
+
+  # ============================================================
+  # User Service
+  # ============================================================
   user-service:
     build:
       context: ./user-service
@@ -78,12 +150,14 @@ services:
     container_name: banking-user
     ports:
       - "8081:8081"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: user-service
@@ -91,13 +165,23 @@ services:
 
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+
     restart: unless-stopped
 
+
+  # ============================================================
+  # Auth Service
+  # ============================================================
   auth-service:
     build:
       context: ./auth-service
@@ -105,12 +189,14 @@ services:
     container_name: banking-auth
     ports:
       - "8082:8082"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: auth-service
@@ -120,14 +206,23 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
-      - user-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      user-service:
+        condition: service_started
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Notification Service
+  # ============================================================
   notification-service:
     build:
       context: ./notification-service
@@ -135,6 +230,7 @@ services:
     container_name: banking-notification
     ports:
       - "8087:8087"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
@@ -145,12 +241,19 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka
 
     depends_on:
-      - mailpit
-      - discovery-service
-      - config-service
+      mailpit:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Account Service
+  # ============================================================
   account-service:
     build:
       context: ./account-service
@@ -158,12 +261,14 @@ services:
     container_name: banking-account
     ports:
       - "8084:8084"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/account_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: account-service
@@ -173,14 +278,23 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
-      - user-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      user-service:
+        condition: service_started
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Transaction Service
+  # ============================================================
   transaction-service:
     build:
       context: ./transaction-service
@@ -188,12 +302,14 @@ services:
     container_name: banking-transaction
     ports:
       - "8085:8085"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/transaction_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: transaction-service
@@ -203,14 +319,23 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
-      - account-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      account-service:
+        condition: service_started
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Loan Service
+  # ============================================================
   loan-service:
     build:
       context: ./loan-service
@@ -218,12 +343,14 @@ services:
     container_name: banking-loan
     ports:
       - "8086:8086"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loan_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: loan-service
@@ -233,15 +360,25 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
-      - account-service
-      - transaction-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Complaint Service
+  # ============================================================
   complaint-service:
     build:
       context: ./complaint-service
@@ -249,12 +386,14 @@ services:
     container_name: banking-complaint
     ports:
       - "8089:8089"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/complaint_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: complaint-service
@@ -264,13 +403,21 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # Audit Service
+  # ============================================================
   audit-service:
     build:
       context: ./audit-service
@@ -278,12 +425,14 @@ services:
     container_name: banking-audit
     ports:
       - "8090:8090"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
       EUREKA_INSTANCE_HOSTNAME: audit-service
@@ -293,13 +442,21 @@ services:
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
 
     depends_on:
-      - postgres
-      - kafka
-      - discovery-service
-      - config-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
 
     restart: unless-stopped
 
+
+  # ============================================================
+  # API Gateway
+  # ============================================================
   api-gateway:
     build:
       context: ./api-gateway
@@ -307,6 +464,7 @@ services:
     container_name: banking-gateway
     ports:
       - "8080:8080"
+
     environment:
       CONFIG_SERVER_URL: http://config-service:8888
 
@@ -314,17 +472,27 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka
 
     depends_on:
-      - discovery-service
-      - config-service
-      - user-service
-      - auth-service
-      - account-service
-      - transaction-service
-      - loan-service
-      - complaint-service
-      - audit-service
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      auth-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      loan-service:
+        condition: service_started
+      complaint-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
 
     restart: unless-stopped
+
 
 volumes:
   postgres_data:
