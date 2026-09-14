@@ -10,6 +10,7 @@ import az.texnoera.bank.accountservice.account.service.AccountService;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
 import az.texnoera.bank.accountservice.audit.AuditEventPublisher;
 import az.texnoera.bank.accountservice.client.UserClient;
+import az.texnoera.bank.accountservice.client.UserServiceClient;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class AccountServiceImpl implements AccountService {
     private final AuditEventPublisher auditEventPublisher;
     private final AccountMapper accountMapper;
     private final IbanGenerator ibanGenerator;
-    private final UserClient userClient;
+    private final UserServiceClient userServiceClient;
 
     @Override
     @Transactional
@@ -38,7 +39,7 @@ public class AccountServiceImpl implements AccountService {
             String ipAddress
     ) {
 
-        if (!userClient.userExists(userId)) {
+        if (!userServiceClient.userExists(userId)) {
             throw new IllegalArgumentException(
                     "User not found with id: " + userId
             );
