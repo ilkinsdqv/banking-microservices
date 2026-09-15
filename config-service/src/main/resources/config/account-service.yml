@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: account-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/account_db}
+    username: ${SPRING_DATASOURCE_USERNAME:bank_user}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
+
+server:
+  port: 8084
+
+jwt:
+  secret: ${JWT_SECRET}
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    prefer-ip-address: true
+
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      UserClientuserExistsUUID:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+  timelimiter:
+    instances:
+      UserClientuserExistsUUID:
+        timeout-duration: 2s
+        cancel-running-future: true
+
+  bulkhead:
+    instances:
+      UserClientuserExistsUUID:
+        max-concurrent-calls: 20
+        max-wait-duration: 100ms
+
+  retry:
+    instances:
+      UserClientuserExistsUUID:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.RetryableException
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException

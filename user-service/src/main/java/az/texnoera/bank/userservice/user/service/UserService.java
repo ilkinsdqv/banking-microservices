@@ -12,7 +12,10 @@ import java.util.UUID;
 
 public interface UserService {
 
-    UserResponse createUser(CreateUserRequest request);
+    UserResponse createUser(
+            CreateUserRequest request,
+            String ipAddress
+    );
     UserResponse getUserById(UUID id);
     Page<UserResponse> getAllUsers(Pageable pageable);
     UserResponse updateUser(UUID id, UpdateUserRequest request);
@@ -24,4 +27,5 @@ public interface UserService {
     void unlockUser(UUID id);
     UserAuthResponse getUserForAuthentication(String email);
     UserAuthResponse getUserForAuthenticationById(UUID id);
+    boolean existsById(UUID id);
 }

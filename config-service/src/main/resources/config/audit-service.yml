@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: audit-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audit_db}
+    username: ${SPRING_DATASOURCE_USERNAME:bank_user}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    consumer:
+      group-id: audit-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+server:
+  port: 8090
+
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    prefer-ip-address: true
+
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+
+jwt:
+  secret: ${JWT_SECRET}
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}

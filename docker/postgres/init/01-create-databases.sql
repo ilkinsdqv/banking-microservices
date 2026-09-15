@@ -1,1 +1,7 @@
+CREATE DATABASE user_db;
 CREATE DATABASE auth_db;
+CREATE DATABASE account_db;
+CREATE DATABASE transaction_db;
+CREATE DATABASE loan_db;
+CREATE DATABASE complaint_db;
+CREATE DATABASE audit_db;

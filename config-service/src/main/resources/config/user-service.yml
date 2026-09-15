@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/user_db}
+    username: ${SPRING_DATASOURCE_USERNAME:bank_user}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+    properties:
+      hibernate:
+        format_sql: true
+
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8081
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 900000
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    prefer-ip-address: true
+
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true

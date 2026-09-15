@@ -1,5 +1,8 @@
 package az.texnoera.bank.userservice.user.service.impl;
 
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
+import az.texnoera.bank.userservice.audit.AuditEventPublisher;
 import az.texnoera.bank.userservice.user.client.NotificationClient;
 import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
@@ -36,18 +39,24 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
     private final NotificationClient notificationClient;
+    private final AuditEventPublisher auditEventPublisher;
 
-    @Transactional
     @Override
-    public UserResponse createUser(CreateUserRequest request) {
+    @Transactional
+    public UserResponse createUser(
+            CreateUserRequest request,
+            String ipAddress
+    ) {
         if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
         }
+
         if (userRepository.existsByFin(request.fin())) {
             throw new FinAlreadyExistsException(request.fin());
         }
 
-        String encodedPassword = passwordEncoder.encode(request.password());
+        String encodedPassword =
+                passwordEncoder.encode(request.password());
 
         User user = new User(
                 request.firstName(),
@@ -61,6 +70,16 @@ public class UserServiceImpl implements UserService {
         );
 
         User savedUser = userRepository.save(user);
+
+        auditEventPublisher.publish(
+                savedUser.getId(),
+                AuditAction.USER_REGISTERED,
+                "USER",
+                savedUser.getId(),
+                "User registered: " + savedUser.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
 
         String verificationToken =
                 emailVerificationService.createVerificationToken(savedUser);
@@ -211,5 +230,11 @@ public class UserServiceImpl implements UserService {
                 user.isAccountLocked(),
                 user.isEnabled()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID id) {
+        return userRepository.existsById(id);
     }
 }

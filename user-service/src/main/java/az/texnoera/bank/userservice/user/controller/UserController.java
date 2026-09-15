@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +39,14 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
-        return userService.createUser(request);
+    public UserResponse createUser(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody CreateUserRequest request
+    ) {
+        return userService.createUser(
+                request,
+                getClientIpAddress(httpRequest)
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN') or @userSecurityService.isCurrentUser(authentication, #id)")
@@ -117,10 +125,17 @@ public class UserController {
 
     @GetMapping("/email-verification/verify")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void verifyEmail(@RequestParam String token) {
-        emailVerificationService.verifyEmail(token);
+    public void verifyEmail(
+            @RequestParam String token,
+            HttpServletRequest httpRequest
+    ) {
+        emailVerificationService.verifyEmail(
+                token,
+                getClientIpAddress(httpRequest)
+        );
     }
 
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     @GetMapping("/authentication")
     public UserAuthResponse getUserForAuthentication(
             @RequestParam String email
@@ -128,10 +143,32 @@ public class UserController {
         return userService.getUserForAuthentication(email);
     }
 
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     @GetMapping("/authentication/{id}")
     public UserAuthResponse getUserForAuthenticationById(
             @PathVariable UUID id
     ) {
         return userService.getUserForAuthenticationById(id);
+    }
+
+    @GetMapping("/{id}/exists")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<Boolean> userExists(
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(userService.existsById(id));
+    }
+
+    private String getClientIpAddress(
+            HttpServletRequest request
+    ) {
+        String forwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }

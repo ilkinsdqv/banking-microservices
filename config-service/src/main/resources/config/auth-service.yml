@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auth_db}
+    username: ${SPRING_DATASOURCE_USERNAME:bank_user}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  flyway:
+    enabled: true
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+server:
+  port: 8082
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 900000
+
+security:
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
+
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    prefer-ip-address: true
+
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true

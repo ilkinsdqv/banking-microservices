@@ -1,5 +1,8 @@
 package az.texnoera.bank.userservice.user.service.impl;
 
+import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
+import az.texnoera.bank.userservice.audit.AuditEventPublisher;
 import az.texnoera.bank.userservice.user.entity.EmailVerificationToken;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.exception.EmailVerificationTokenExpiredException;
@@ -24,6 +27,8 @@ public class EmailVerificationServiceImpl
     private final EmailVerificationTokenRepository tokenRepository;
 
     private final SecureRandom secureRandom = new SecureRandom();
+
+    private final AuditEventPublisher auditEventPublisher;
 
     @Transactional
     @Override
@@ -50,7 +55,10 @@ public class EmailVerificationServiceImpl
 
     @Transactional
     @Override
-    public void verifyEmail(String token) {
+    public void verifyEmail(
+            String token,
+            String ipAddress
+    ) {
 
         EmailVerificationToken verificationToken =
                 tokenRepository.findByToken(token)
@@ -71,6 +79,16 @@ public class EmailVerificationServiceImpl
         user.verifyEmail();
 
         verificationToken.markAsUsed();
+
+        auditEventPublisher.publish(
+                user.getId(),
+                AuditAction.USER_EMAIL_VERIFIED,
+                "USER",
+                user.getId(),
+                "Email verified for user: " + user.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
     }
 
     private String generateToken() {
