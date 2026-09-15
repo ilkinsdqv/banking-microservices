@@ -365,6 +365,8 @@ If a subsequent balance operation fails after a previous operation has already c
 
 This provides application-level consistency without introducing a distributed transaction coordinator.
 
+Account Service also uses Resilience4j for its User Service dependency, including retry, bulkhead, time limiter, and circuit breaker configuration. This protects account creation and user-existence checks from transient downstream failures.
+
 ### Loan Lifecycle
 
 ```text
@@ -689,24 +691,30 @@ Examples include:
 
 ## Testing Strategy
 
-Automated tests are planned as a dedicated final phase of the project.
+The project includes automated tests for the implemented core services and a final full-project Maven verification.
 
-The final verification phase will cover:
+Covered areas include:
 
-- Unit tests
-- Integration tests
-- REST API tests
-- Authentication and authorization scenarios
-- Account operations
-- Money transfer flows
-- Loan lifecycle
-- Complaint management
-- Kafka event processing
+- Transaction Service business logic
+- Loan Service business logic and entity state transitions
+- Loan REST controller behavior
+- Complaint Service business logic
+- Notification Service application context
+- Authentication and authorization related service scenarios
+- Account operations and service-to-service interactions
+- Money transfer flows and compensation handling
+- Loan lifecycle and payment flows
+- Complaint management flows
 - Service-to-service failure scenarios
-- Resilience4j behavior
-- Docker Compose integration
+- Notification infrastructure configuration
 
-The current development phase focuses on completing and verifying the microservice architecture and end-to-end business flows before implementing the automated test suite.
+The complete multi-module test suite was verified successfully with:
+
+```bash
+mvn clean test
+```
+
+The final test phase is considered complete. Additional testing improvements such as Testcontainers and broader integration/REST coverage can be added as future enhancements.
 
 ---
 
@@ -737,6 +745,9 @@ The following major components have been implemented:
 - [x] Money transfer
 - [x] Loan lifecycle
 - [x] Email notification flow
+- [x] Automated service tests
+- [x] Full Maven test suite
+- [x] End-to-end business flow verification
 
 ---
 
@@ -744,7 +755,6 @@ The following major components have been implemented:
 
 Potential future improvements include:
 
-- Automated unit and integration tests
 - Testcontainers
 - CI/CD pipeline
 - Production-grade secrets management
