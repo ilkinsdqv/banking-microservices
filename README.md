@@ -121,6 +121,7 @@ The system follows a microservice architecture where each business domain is imp
 - Spring Cloud Config
 - OpenFeign
 - MapStruct
+- Resilience4j
 - Lombok
 - Flyway
 
@@ -358,7 +359,11 @@ Transaction Service
      Account Service
 ```
 
-The transaction flow also supports compensation when required to maintain consistency between balance operations.
+The transaction flow performs the required account balance operations through Account Service.
+
+If a subsequent balance operation fails after a previous operation has already completed, the transaction flow supports compensation to restore the affected account balance.
+
+This provides application-level consistency without introducing a distributed transaction coordinator.
 
 ### Loan Lifecycle
 
@@ -439,7 +444,7 @@ Web UI
 Mailpit:
 
 ```text
-SMTP: http://localhost:1025
+SMTP: localhost:1025
 Web UI: http://localhost:8025
 ```
 
@@ -682,6 +687,29 @@ Examples include:
 
 ---
 
+## Testing Strategy
+
+Automated tests are planned as a dedicated final phase of the project.
+
+The final verification phase will cover:
+
+- Unit tests
+- Integration tests
+- REST API tests
+- Authentication and authorization scenarios
+- Account operations
+- Money transfer flows
+- Loan lifecycle
+- Complaint management
+- Kafka event processing
+- Service-to-service failure scenarios
+- Resilience4j behavior
+- Docker Compose integration
+
+The current development phase focuses on completing and verifying the microservice architecture and end-to-end business flows before implementing the automated test suite.
+
+---
+
 ## Current Status
 
 The following major components have been implemented:
@@ -723,11 +751,14 @@ Potential future improvements include:
 - Distributed tracing
 - Metrics and monitoring
 - Centralized logging
-- Rate limiting
+- API rate limiting
 - API documentation improvements
 - Production payment provider integration
 - Kubernetes deployment
 - High availability and horizontal scaling
+- Advanced observability with OpenTelemetry
+
+Distributed Saga orchestration is intentionally not part of the current implementation and may be considered if the system evolves toward more complex distributed business transactions.
 
 ---
 

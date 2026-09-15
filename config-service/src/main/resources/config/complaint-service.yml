@@ -19,6 +19,13 @@ spring:
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
+
 server:
   port: 8089
 
@@ -39,3 +46,37 @@ eureka:
 
     register-with-eureka: true
     fetch-registry: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      UserClientuserExistsUUID:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+  timelimiter:
+    instances:
+      UserClientuserExistsUUID:
+        timeout-duration: 2s
+        cancel-running-future: true
+
+  bulkhead:
+    instances:
+      UserClientuserExistsUUID:
+        max-concurrent-calls: 20
+        max-wait-duration: 100ms
+
+  retry:
+    instances:
+      UserClientuserExistsUUID:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.RetryableException
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException

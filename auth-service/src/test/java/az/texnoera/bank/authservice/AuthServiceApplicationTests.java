@@ -1,13 +1,16 @@
 package az.texnoera.bank.authservice;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootTest
+import static org.assertj.core.api.Assertions.assertThat;
+
 class AuthServiceApplicationTests {
 
     @Test
-    void contextLoads() {
+    void shouldDeclareSpringBootApplication() {
+        assertThat(AuthServiceApplication.class)
+                .hasAnnotation(SpringBootApplication.class);
     }
 
 }

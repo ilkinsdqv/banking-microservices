@@ -3,7 +3,7 @@ package az.texnoera.bank.complaintservice.complaint.service.impl;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.complaintservice.audit.AuditEventPublisher;
-import az.texnoera.bank.complaintservice.client.UserClient;
+import az.texnoera.bank.complaintservice.client.UserServiceClient;
 import az.texnoera.bank.complaintservice.complaint.dto.request.CreateComplaintRequest;
 import az.texnoera.bank.complaintservice.complaint.dto.request.ResolveComplaintRequest;
 import az.texnoera.bank.complaintservice.complaint.dto.response.ComplaintResponse;
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
-    private final UserClient userClient;
+    private final UserServiceClient userServiceClient;
     private final ComplaintMapper complaintMapper;
     private final AuditEventPublisher auditEventPublisher;
 
@@ -37,7 +37,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             String ipAddress
     ) {
 
-        Boolean exists = userClient.userExists(userId);
+        Boolean exists = userServiceClient.userExists(userId);
 
         if (!Boolean.TRUE.equals(exists)) {
             throw new IllegalArgumentException(

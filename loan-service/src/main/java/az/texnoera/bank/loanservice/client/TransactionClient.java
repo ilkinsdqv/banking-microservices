@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "transaction-service",
-        configuration = FeignSecurityConfig.class
+        configuration = FeignSecurityConfig.class,
+        fallbackFactory = TransactionClientFallbackFactory.class
 )
 public interface TransactionClient {
 

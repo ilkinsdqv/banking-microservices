@@ -4,7 +4,9 @@ import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.loanservice.audit.AuditEventPublisher;
 import az.texnoera.bank.loanservice.client.AccountClient;
+import az.texnoera.bank.loanservice.client.AccountServiceClient;
 import az.texnoera.bank.loanservice.client.TransactionClient;
+import az.texnoera.bank.loanservice.client.TransactionServiceClient;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanDisbursementRequest;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
@@ -39,8 +41,8 @@ public class LoanServiceImpl implements LoanService {
     private final LoanMapper loanMapper;
     private final LoanPaymentRepository loanPaymentRepository;
     private final LoanPaymentMapper loanPaymentMapper;
-    private final TransactionClient transactionClient;
-    private final AccountClient accountClient;
+    private final TransactionServiceClient transactionServiceClient;
+    private final AccountServiceClient accountServiceClient;
     private final AuditEventPublisher auditEventPublisher;
 
     @Override
@@ -52,7 +54,7 @@ public class LoanServiceImpl implements LoanService {
     ) {
 
         AccountResponse account =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         request.accountId()
                 );
 
@@ -190,7 +192,7 @@ public class LoanServiceImpl implements LoanService {
         Loan loan = getEntity(id);
 
         AccountResponse account =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         loan.getAccountId()
                 );
 
@@ -200,7 +202,7 @@ public class LoanServiceImpl implements LoanService {
         );
 
         TransactionResponse transaction =
-                transactionClient.createLoanDisbursement(
+                transactionServiceClient.createLoanDisbursement(
                         new CreateLoanDisbursementRequest(
                                 loan.getUserId(),
                                 loan.getAccountId(),
@@ -266,7 +268,7 @@ public class LoanServiceImpl implements LoanService {
         Loan loan = getEntity(id);
 
         TransactionResponse transaction =
-                transactionClient.createLoanPayment(
+                transactionServiceClient.createLoanPayment(
                         new CreateLoanPaymentRequest(
                                 loan.getUserId(),
                                 loan.getAccountId(),

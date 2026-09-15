@@ -4,6 +4,7 @@ import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.transactionservice.audit.AuditEventPublisher;
 import az.texnoera.bank.transactionservice.client.AccountClient;
+import az.texnoera.bank.transactionservice.client.AccountServiceClient;
 import az.texnoera.bank.transactionservice.client.dto.AccountResponse;
 import az.texnoera.bank.transactionservice.transaction.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.transactionservice.transaction.dto.request.CreateTransactionRequest;
@@ -31,7 +32,7 @@ public class TransactionServiceImpl
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
-    private final AccountClient accountClient;
+    private final AccountServiceClient accountServiceClient;
     private final AuditEventPublisher auditEventPublisher;
 
     @Override
@@ -67,7 +68,7 @@ public class TransactionServiceImpl
     ) {
 
         AccountResponse account =
-                accountClient.getAccountById(accountId);
+                accountServiceClient.getAccountById(accountId);
 
         if (!account.userId().equals(userId)) {
             throw new IllegalArgumentException(
@@ -81,7 +82,7 @@ public class TransactionServiceImpl
             );
         }
 
-        accountClient.withdraw(
+        accountServiceClient.withdraw(
                 accountId,
                 new BalanceOperationRequest(amount)
         );
@@ -126,7 +127,7 @@ public class TransactionServiceImpl
     ) {
 
         AccountResponse account =
-                accountClient.getAccountById(accountId);
+                accountServiceClient.getAccountById(accountId);
 
         if (!account.userId().equals(userId)) {
             throw new IllegalArgumentException(
@@ -140,7 +141,7 @@ public class TransactionServiceImpl
             );
         }
 
-        accountClient.deposit(
+        accountServiceClient.deposit(
                 accountId,
                 new BalanceOperationRequest(amount)
         );
@@ -180,14 +181,14 @@ public class TransactionServiceImpl
     ) {
 
         AccountResponse account =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         request.toAccountId()
                 );
 
         validateAccountOwner(account, userId);
         validateCurrency(account, request.currency());
 
-        accountClient.deposit(
+        accountServiceClient.deposit(
                 account.id(),
                 new BalanceOperationRequest(request.amount())
         );
@@ -227,14 +228,14 @@ public class TransactionServiceImpl
     ) {
 
         AccountResponse account =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         request.fromAccountId()
                 );
 
         validateAccountOwner(account, userId);
         validateCurrency(account, request.currency());
 
-        accountClient.withdraw(
+        accountServiceClient.withdraw(
                 account.id(),
                 new BalanceOperationRequest(request.amount())
         );
@@ -274,12 +275,12 @@ public class TransactionServiceImpl
     ) {
 
         AccountResponse sourceAccount =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         request.fromAccountId()
                 );
 
         AccountResponse destinationAccount =
-                accountClient.getAccountById(
+                accountServiceClient.getAccountById(
                         request.toAccountId()
                 );
 
@@ -315,7 +316,7 @@ public class TransactionServiceImpl
 
         try {
 
-            accountClient.withdraw(
+            accountServiceClient.withdraw(
                     sourceAccount.id(),
                     new BalanceOperationRequest(
                             request.amount()
@@ -324,7 +325,7 @@ public class TransactionServiceImpl
 
             try {
 
-                accountClient.deposit(
+                accountServiceClient.deposit(
                         destinationAccount.id(),
                         new BalanceOperationRequest(
                                 request.amount()
@@ -335,7 +336,7 @@ public class TransactionServiceImpl
 
                 try {
 
-                    accountClient.deposit(
+                    accountServiceClient.deposit(
                             sourceAccount.id(),
                             new BalanceOperationRequest(
                                     request.amount()

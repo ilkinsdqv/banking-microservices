@@ -9,7 +9,8 @@ import java.util.UUID;
 
 @FeignClient(
         name = "user-service",
-        configuration = FeignSecurityConfig.class
+        configuration = FeignSecurityConfig.class,
+        fallbackFactory = UserClientFallbackFactory.class
 )
 public interface UserClient {
 

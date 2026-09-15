@@ -10,7 +10,8 @@ import java.util.UUID;
 
 @FeignClient(
         name = "account-service",
-        configuration = FeignSecurityConfig.class
+        configuration = FeignSecurityConfig.class,
+        fallbackFactory = AccountClientFallbackFactory.class
 )
 public interface AccountClient {
 
