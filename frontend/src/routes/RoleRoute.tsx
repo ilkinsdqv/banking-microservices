@@ -1,14 +1,16 @@
 import { Navigate, Outlet } from "react-router";
 
-type RoleRouteProps = {
+import { useAuth } from "../features/auth/hooks/use-auth";
+
+interface RoleRouteProps {
     allowedRoles: string[];
-};
+}
 
 function RoleRoute({ allowedRoles }: RoleRouteProps) {
-    const userRoles: string[] = [];
+    const { user } = useAuth();
 
-    const hasRequiredRole = allowedRoles.some((role) =>
-        userRoles.includes(role),
+    const hasRequiredRole = Boolean(
+        user && allowedRoles.some((role) => user.roles.includes(role)),
     );
 
     if (!hasRequiredRole) {

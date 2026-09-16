@@ -1,12 +1,26 @@
+import { useLocation, useNavigate } from "react-router";
+
+import LoginForm from "../components/LoginForm";
+
+interface LoginLocationState {
+    from?: {
+        pathname?: string;
+    };
+}
+
 function LoginPage() {
-    return (
-        <div>
-            <h1 className="text-2xl font-bold text-slate-900">Login</h1>
-            <p className="mt-2 text-sm text-slate-500">
-                Authentication form will be implemented in Phase 4.
-            </p>
-        </div>
-    );
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const state = location.state as LoginLocationState | null;
+
+    const handleSuccess = () => {
+        const destination = state?.from?.pathname ?? "/dashboard";
+
+        navigate(destination, { replace: true });
+    };
+
+    return <LoginForm onSuccess={handleSuccess} />;
 }
 
 export default LoginPage;
