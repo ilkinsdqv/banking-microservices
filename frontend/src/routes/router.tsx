@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import {createBrowserRouter} from "react-router";
 
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -13,51 +13,60 @@ import TransactionsPage from "../features/transactions/pages/TransactionsPage";
 import LoansPage from "../features/loans/pages/LoansPage";
 import ComplaintsPage from "../features/complaints/pages/ComplaintsPage";
 
+import AccountDetailPage from "../features/accounts/pages/AccountDetailPage";
+
 import ProtectedRoute from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
     {
-        element: <AuthLayout />,
+        element: <AuthLayout/>,
         children: [
             {
                 path: "/login",
-                element: <LoginPage />,
+                element: <LoginPage/>,
             },
             {
                 path: "/register",
-                element: <RegisterPage />,
+                element: <RegisterPage/>,
             },
             {
                 path: "/verify-email",
-                element: <VerifyEmailPage />,
+                element: <VerifyEmailPage/>,
             },
         ],
     },
     {
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute/>,
         children: [
             {
-                element: <DashboardLayout />,
+                element: <DashboardLayout/>,
                 children: [
                     {
                         path: "/dashboard",
-                        element: <DashboardPage />,
+                        element: <DashboardPage/>,
                     },
                     {
                         path: "/accounts",
-                        element: <AccountsPage />,
+                        element: <AccountsPage/>,
+                    },
+                    {   path: "/accounts",
+                        element: <AccountsPage/>
+                    },
+                    {
+                        path: "/accounts/:id",
+                        element: <AccountDetailPage/>
                     },
                     {
                         path: "/transactions",
-                        element: <TransactionsPage />,
+                        element: <TransactionsPage/>,
                     },
                     {
                         path: "/loans",
-                        element: <LoansPage />,
+                        element: <LoansPage/>,
                     },
                     {
                         path: "/complaints",
-                        element: <ComplaintsPage />,
+                        element: <ComplaintsPage/>,
                     },
                 ],
             },
@@ -65,6 +74,6 @@ export const router = createBrowserRouter([
     },
     {
         path: "*",
-        element: <LoginPage />,
+        element: <LoginPage/>,
     },
 ]);

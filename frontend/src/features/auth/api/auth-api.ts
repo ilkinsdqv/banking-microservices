@@ -1,4 +1,7 @@
+import axios from "axios";
+
 import { apiClient } from "../../../lib/axios";
+import { env } from "../../../config/env";
 
 import type {
     LoginRequest,
@@ -6,9 +9,17 @@ import type {
     RefreshTokenRequest,
 } from "../types/auth";
 
+const authClient = axios.create({
+    baseURL: env.apiBaseUrl,
+    headers: {
+        "Content-Type": "application/json",
+    },
+    timeout: 15_000,
+});
+
 export const authApi = {
     login: async (request: LoginRequest): Promise<LoginResponse> => {
-        const response = await apiClient.post<LoginResponse>(
+        const response = await authClient.post<LoginResponse>(
             "/api/v1/auth/login",
             request,
         );
@@ -19,7 +30,7 @@ export const authApi = {
     refresh: async (
         request: RefreshTokenRequest,
     ): Promise<LoginResponse> => {
-        const response = await apiClient.post<LoginResponse>(
+        const response = await authClient.post<LoginResponse>(
             "/api/v1/auth/refresh",
             request,
         );
@@ -28,6 +39,8 @@ export const authApi = {
     },
 
     logout: async (request: RefreshTokenRequest): Promise<void> => {
-        await apiClient.post("/api/v1/auth/logout", request);
+        await authClient.post("/api/v1/auth/logout", request);
     },
+
+    request: apiClient,
 };
