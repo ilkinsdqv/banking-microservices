@@ -12,6 +12,8 @@ import AccountsPage from "../features/accounts/pages/AccountsPage";
 import TransactionsPage from "../features/transactions/pages/TransactionsPage";
 import LoansPage from "../features/loans/pages/LoansPage";
 import ComplaintsPage from "../features/complaints/pages/ComplaintsPage";
+import TransferPage from "../features/transactions/pages/TransferPage";
+import TransactionDetailPage from "../features/transactions/pages/TransactionDetailPage";
 
 import AccountDetailPage from "../features/accounts/pages/AccountDetailPage";
 
@@ -59,6 +61,26 @@ export const router = createBrowserRouter([
                     {
                         path: "/transactions",
                         element: <TransactionsPage/>,
+                    },
+                    {
+                        path: "/transactions",
+                        element: <TransactionsPage />
+                    },
+                    {
+                        path: "/transactions",
+                        element: <TransactionsPage />
+                    },
+                    {
+                        path: "/transactions/transfer",
+                        element: <TransferPage />
+                    },
+                    {
+                        path: "/transactions/:id",
+                        element: <TransactionDetailPage />
+                    },
+                    {
+                        path: "/transactions/transfer",
+                        element: <TransferPage />
                     },
                     {
                         path: "/loans",
