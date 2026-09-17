@@ -11,6 +11,8 @@ import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import AccountsPage from "../features/accounts/pages/AccountsPage";
 import TransactionsPage from "../features/transactions/pages/TransactionsPage";
 import LoansPage from "../features/loans/pages/LoansPage";
+import LoanDetailPage from "../features/loans/pages/LoanDetailPage";
+import CreateLoanPage from "../features/loans/pages/CreateLoanPage";
 import ComplaintsPage from "../features/complaints/pages/ComplaintsPage";
 import TransferPage from "../features/transactions/pages/TransferPage";
 import TransactionDetailPage from "../features/transactions/pages/TransactionDetailPage";
@@ -85,6 +87,26 @@ export const router = createBrowserRouter([
                     {
                         path: "/loans",
                         element: <LoansPage/>,
+                    },
+                    {
+                        path: "/loans",
+                        element: <LoansPage />
+                    },
+                    {
+                        path: "/loans",
+                        element: <LoansPage />
+                    },
+                    {
+                        path: "/loans/new",
+                        element: <CreateLoanPage />
+                    },
+                    {
+                        path: "/loans/:id",
+                        element: <LoanDetailPage />
+                    },
+                    {
+                        path: "/loans/new",
+                        element: <CreateLoanPage />
                     },
                     {
                         path: "/complaints",
