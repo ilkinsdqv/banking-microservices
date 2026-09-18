@@ -7,6 +7,14 @@ import type {
 } from "../types/account";
 
 export const accountsApi = {
+    getAll: async (): Promise<Account[]> => {
+        const response = await apiClient.get<Account[]>(
+            "/api/v1/accounts",
+        );
+
+        return response.data;
+    },
+
     getById: async (id: string): Promise<Account> => {
         const response = await apiClient.get<Account>(
             `/api/v1/accounts/${id}`,

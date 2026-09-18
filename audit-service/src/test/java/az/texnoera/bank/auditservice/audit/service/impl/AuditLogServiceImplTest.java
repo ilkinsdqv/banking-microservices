@@ -7,11 +7,17 @@ import az.texnoera.bank.auditservice.audit.exception.AuditLogNotFoundException;
 import az.texnoera.bank.auditservice.audit.mapper.AuditLogMapper;
 import az.texnoera.bank.auditservice.audit.repository.AuditLogRepository;
 import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +25,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -111,13 +118,23 @@ class AuditLogServiceImplTest {
     }
 
     @Test
-    void getAllAuditLogs_success() {
+    void getAuditLogs_withoutFilters_success() {
+
+        Pageable pageable = PageRequest.of(0, 20);
 
         AuditLog secondAuditLog = mock(AuditLog.class);
         AuditLogResponse secondResponse = mock(AuditLogResponse.class);
 
-        when(auditLogRepository.findAllByOrderByCreatedAtDesc())
-                .thenReturn(List.of(auditLog, secondAuditLog));
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog, secondAuditLog),
+                pageable,
+                2
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
 
         when(auditLogMapper.toResponse(auditLog))
                 .thenReturn(auditLogResponse);
@@ -125,93 +142,270 @@ class AuditLogServiceImplTest {
         when(auditLogMapper.toResponse(secondAuditLog))
                 .thenReturn(secondResponse);
 
-        List<AuditLogResponse> result =
-                auditLogService.getAllAuditLogs();
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        null,
+                        null,
+                        null,
+                        null,
+                        pageable
+                );
 
         assertEquals(
                 List.of(auditLogResponse, secondResponse),
-                result
+                result.getContent()
         );
 
-        verify(auditLogRepository)
-                .findAllByOrderByCreatedAtDesc();
+        assertEquals(2, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
 
         verify(auditLogMapper).toResponse(auditLog);
         verify(auditLogMapper).toResponse(secondAuditLog);
     }
 
     @Test
-    void getAuditLogsByUserId_success() {
+    void getAuditLogs_byUserId_success() {
 
-        when(auditLogRepository
-                .findAllByUserIdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of(auditLog));
+        Pageable pageable = PageRequest.of(0, 20);
+
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog),
+                pageable,
+                1
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
 
         when(auditLogMapper.toResponse(auditLog))
                 .thenReturn(auditLogResponse);
 
-        List<AuditLogResponse> result =
-                auditLogService.getAuditLogsByUserId(userId);
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        userId,
+                        null,
+                        null,
+                        null,
+                        pageable
+                );
 
         assertEquals(
                 List.of(auditLogResponse),
-                result
+                result.getContent()
         );
 
-        verify(auditLogRepository)
-                .findAllByUserIdOrderByCreatedAtDesc(userId);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
 
         verify(auditLogMapper).toResponse(auditLog);
     }
 
     @Test
-    void getAuditLogsByAction_success() {
+    void getAuditLogs_byAction_success() {
+
+        Pageable pageable = PageRequest.of(0, 20);
 
         AuditAction action = AuditAction.ACCOUNT_CREATED;
 
-        when(auditLogRepository
-                .findAllByActionOrderByCreatedAtDesc(action))
-                .thenReturn(List.of(auditLog));
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog),
+                pageable,
+                1
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
 
         when(auditLogMapper.toResponse(auditLog))
                 .thenReturn(auditLogResponse);
 
-        List<AuditLogResponse> result =
-                auditLogService.getAuditLogsByAction(action);
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        null,
+                        action,
+                        null,
+                        null,
+                        pageable
+                );
 
         assertEquals(
                 List.of(auditLogResponse),
-                result
+                result.getContent()
         );
 
-        verify(auditLogRepository)
-                .findAllByActionOrderByCreatedAtDesc(action);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
 
         verify(auditLogMapper).toResponse(auditLog);
     }
 
     @Test
-    void getAuditLogsByServiceName_success() {
+    void getAuditLogs_byServiceName_success() {
+
+        Pageable pageable = PageRequest.of(0, 20);
 
         String serviceName = "ACCOUNT-SERVICE";
 
-        when(auditLogRepository
-                .findAllByServiceNameOrderByCreatedAtDesc(serviceName))
-                .thenReturn(List.of(auditLog));
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog),
+                pageable,
+                1
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
 
         when(auditLogMapper.toResponse(auditLog))
                 .thenReturn(auditLogResponse);
 
-        List<AuditLogResponse> result =
-                auditLogService.getAuditLogsByServiceName(serviceName);
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        null,
+                        null,
+                        serviceName,
+                        null,
+                        pageable
+                );
 
         assertEquals(
                 List.of(auditLogResponse),
-                result
+                result.getContent()
         );
 
-        verify(auditLogRepository)
-                .findAllByServiceNameOrderByCreatedAtDesc(serviceName);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
+
+        verify(auditLogMapper).toResponse(auditLog);
+    }
+
+    @Test
+    void getAuditLogs_byStatus_success() {
+
+        Pageable pageable = PageRequest.of(0, 20);
+
+        AuditStatus status = AuditStatus.SUCCESS;
+
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog),
+                pageable,
+                1
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
+
+        when(auditLogMapper.toResponse(auditLog))
+                .thenReturn(auditLogResponse);
+
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        null,
+                        null,
+                        null,
+                        status,
+                        pageable
+                );
+
+        assertEquals(
+                List.of(auditLogResponse),
+                result.getContent()
+        );
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
+
+        verify(auditLogMapper).toResponse(auditLog);
+    }
+
+    @Test
+    void getAuditLogs_withAllFilters_success() {
+
+        Pageable pageable = PageRequest.of(1, 10);
+
+        AuditAction action = AuditAction.USER_LOGIN;
+        AuditStatus status = AuditStatus.SUCCESS;
+        String serviceName = "auth-service";
+
+        Page<AuditLog> auditLogPage = new PageImpl<>(
+                List.of(auditLog),
+                pageable,
+                11
+        );
+
+        when(auditLogRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(auditLogPage);
+
+        when(auditLogMapper.toResponse(auditLog))
+                .thenReturn(auditLogResponse);
+
+        Page<AuditLogResponse> result =
+                auditLogService.getAuditLogs(
+                        userId,
+                        action,
+                        serviceName,
+                        status,
+                        pageable
+                );
+
+        assertEquals(
+                List.of(auditLogResponse),
+                result.getContent()
+        );
+
+        assertEquals(11, result.getTotalElements());
+        assertEquals(2, result.getTotalPages());
+        assertEquals(1, result.getNumber());
+        assertEquals(10, result.getSize());
+
+        verify(auditLogRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
 
         verify(auditLogMapper).toResponse(auditLog);
     }

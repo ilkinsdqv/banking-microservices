@@ -17,6 +17,8 @@ public interface AccountService {
 
     AccountResponse getAccountById(UUID id);
 
+    List<AccountResponse> getAllAccounts();
+
     List<AccountResponse> getAccountsByUserId(UUID userId);
 
     AccountResponse deposit(
@@ -24,6 +26,7 @@ public interface AccountService {
             BigDecimal amount,
             String ipAddress
     );
+
     AccountResponse withdraw(
             UUID accountId,
             BigDecimal amount,

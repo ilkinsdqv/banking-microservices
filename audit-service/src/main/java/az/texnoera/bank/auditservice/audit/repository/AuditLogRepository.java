@@ -1,19 +1,12 @@
 package az.texnoera.bank.auditservice.audit.repository;
 
 import az.texnoera.bank.auditservice.audit.entity.AuditLog;
-import az.texnoera.bank.common.audit.AuditAction;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
-
-    List<AuditLog> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
-
-    List<AuditLog> findAllByActionOrderByCreatedAtDesc(AuditAction action);
-
-    List<AuditLog> findAllByServiceNameOrderByCreatedAtDesc(String serviceName);
-
-    List<AuditLog> findAllByOrderByCreatedAtDesc();
+public interface AuditLogRepository
+        extends JpaRepository<AuditLog, UUID>,
+        JpaSpecificationExecutor<AuditLog> {
 }

@@ -9,7 +9,6 @@ import az.texnoera.bank.accountservice.account.repository.AccountRepository;
 import az.texnoera.bank.accountservice.account.service.AccountService;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
 import az.texnoera.bank.accountservice.audit.AuditEventPublisher;
-import az.texnoera.bank.accountservice.client.UserClient;
 import az.texnoera.bank.accountservice.client.UserServiceClient;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
@@ -84,6 +83,16 @@ public class AccountServiceImpl implements AccountService {
                 );
 
         return accountMapper.toResponse(account);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AccountResponse> getAllAccounts() {
+
+        return accountRepository.findAll()
+                .stream()
+                .map(accountMapper::toResponse)
+                .toList();
     }
 
     @Override

@@ -24,8 +24,16 @@ import ComplaintsPage from "../features/complaints/pages/ComplaintsPage";
 import CreateComplaintPage from "../features/complaints/pages/CreateComplaintPage";
 import ComplaintDetailPage from "../features/complaints/pages/ComplaintDetailPage";
 import AdminComplaintsPage from "../features/complaints/pages/AdminComplaintsPage";
+
+import AdminUsersPage from "../features/users/pages/AdminUsersPage";
+import AdminUserDetailPage from "../features/users/pages/AdminUserDetailPage";
+import AdminUserEditPage from "../features/users/pages/AdminUserEditPage";
+
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
+import {AdminAccountsPage} from "../features/accounts/pages/AdminAccountsPage.tsx";
+import {AdminAuditPage} from "../features/audit/pages/AdminAuditPage.tsx";
+import {AuditLogDetailPage} from "../features/audit/pages/AuditLogDetailPage.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -114,6 +122,30 @@ export const router = createBrowserRouter([
                             {
                                 path: "/admin/complaints",
                                 element: <AdminComplaintsPage />,
+                            },
+                            {
+                                path: "/admin/users",
+                                element: <AdminUsersPage />,
+                            },
+                            {
+                                path: "/admin/users/:id",
+                                element: <AdminUserDetailPage />,
+                            },
+                            {
+                                path: "/admin/users/:id/edit",
+                                element: <AdminUserEditPage />,
+                            },
+                            {
+                                path: "/admin/accounts",
+                                element: <AdminAccountsPage />,
+                            },
+                            {
+                                path: "/admin/audit",
+                                element: <AdminAuditPage />,
+                            },
+                            {
+                                path: "/admin/audit/:id",
+                                element: <AuditLogDetailPage />,
                             },
                         ],
                     },
