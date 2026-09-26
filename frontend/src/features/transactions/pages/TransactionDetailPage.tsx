@@ -1,5 +1,25 @@
+import {
+    ArrowDownLeft,
+    ArrowLeft,
+    ArrowLeftRight,
+    ArrowUpRight,
+    Banknote,
+    CalendarDays,
+    CheckCircle2,
+    Clock3,
+    Copy,
+    FileText,
+    ReceiptText,
+    WalletCards,
+    XCircle,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
+import {
+    Button,
+    ErrorState,
+    Skeleton,
+} from "../../../components/ui";
 import { useTransaction } from "../hooks/use-transaction";
 
 function TransactionDetailPage() {
@@ -10,54 +30,93 @@ function TransactionDetailPage() {
         data: transaction,
         isLoading,
         isError,
+        refetch,
     } = useTransaction(id);
 
     if (isLoading) {
         return (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-sm text-slate-500">
-                    Loading transaction...
-                </p>
+            <div className="space-y-6">
+                <Skeleton
+                    width="170px"
+                    height="20px"
+                />
+
+                <div className="max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                    <div className="bg-slate-950 p-8">
+                        <Skeleton
+                            width="150px"
+                            height="16px"
+                            className="bg-white/10"
+                        />
+
+                        <Skeleton
+                            width="280px"
+                            height="48px"
+                            className="mt-4 bg-white/10"
+                        />
+                    </div>
+
+                    <div className="grid gap-6 p-6 sm:grid-cols-2">
+                        {[1, 2, 3, 4, 5, 6].map(
+                            (item) => (
+                                <Skeleton
+                                    key={item}
+                                    height="56px"
+                                />
+                            ),
+                        )}
+                    </div>
+                </div>
             </div>
         );
     }
 
     if (isError || !transaction) {
         return (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-                <h2 className="text-base font-semibold text-red-800">
-                    Transaction not found
-                </h2>
-
-                <p className="mt-1 text-sm text-red-600">
-                    The transaction could not be loaded.
-                </p>
-
-                <button
-                    type="button"
-                    onClick={() => navigate("/transactions")}
-                    className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            <div className="space-y-6">
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        navigate("/transactions")
+                    }
                 >
+                    <ArrowLeft
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                    />
                     Back to transactions
-                </button>
+                </Button>
+
+                <ErrorState
+                    title="Transaction not found"
+                    description="The transaction could not be loaded."
+                    onRetry={() => refetch()}
+                />
             </div>
         );
     }
 
-    const formattedAmount = new Intl.NumberFormat("az-AZ", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(transaction.amount);
+    const formattedAmount =
+        new Intl.NumberFormat("az-AZ", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(transaction.amount);
 
-    const createdAt = new Intl.DateTimeFormat("az-AZ", {
-        dateStyle: "medium",
-        timeStyle: "short",
-    }).format(new Date(transaction.createdAt));
+    const createdAt = new Intl.DateTimeFormat(
+        "az-AZ",
+        {
+            dateStyle: "medium",
+            timeStyle: "short",
+        },
+    ).format(new Date(transaction.createdAt));
 
-    const updatedAt = new Intl.DateTimeFormat("az-AZ", {
-        dateStyle: "medium",
-        timeStyle: "short",
-    }).format(new Date(transaction.updatedAt));
+    const updatedAt = new Intl.DateTimeFormat(
+        "az-AZ",
+        {
+            dateStyle: "medium",
+            timeStyle: "short",
+        },
+    ).format(new Date(transaction.updatedAt));
 
     const typeLabels: Record<string, string> = {
         DEPOSIT: "Deposit",
@@ -72,133 +131,329 @@ function TransactionDetailPage() {
         FAILED: "Failed",
     };
 
-    const statusClassName: Record<string, string> = {
-        PENDING: "bg-amber-100 text-amber-700",
-        COMPLETED: "bg-emerald-100 text-emerald-700",
-        FAILED: "bg-red-100 text-red-700",
+    const getTransactionIcon = () => {
+        switch (transaction.type) {
+            case "DEPOSIT":
+                return ArrowDownLeft;
+
+            case "WITHDRAW":
+                return ArrowUpRight;
+
+            case "TRANSFER":
+                return ArrowLeftRight;
+
+            case "LOAN_DISBURSEMENT":
+                return Banknote;
+
+            default:
+                return ReceiptText;
+        }
+    };
+
+    const getStatusIcon = () => {
+        switch (transaction.status) {
+            case "COMPLETED":
+                return CheckCircle2;
+
+            case "FAILED":
+                return XCircle;
+
+            default:
+                return Clock3;
+        }
+    };
+
+    const getAmountColor = () => {
+        if (
+            transaction.type === "DEPOSIT" ||
+            transaction.type ===
+            "LOAN_DISBURSEMENT"
+        ) {
+            return "text-emerald-400";
+        }
+
+        if (transaction.type === "WITHDRAW") {
+            return "text-amber-400";
+        }
+
+        return "text-white";
+    };
+
+    const getStatusStyle = () => {
+        switch (transaction.status) {
+            case "COMPLETED":
+                return "bg-emerald-400/10 text-emerald-300 ring-emerald-400/20";
+
+            case "FAILED":
+                return "bg-red-400/10 text-red-300 ring-red-400/20";
+
+            default:
+                return "bg-amber-400/10 text-amber-300 ring-amber-400/20";
+        }
+    };
+
+    const TransactionIcon =
+        getTransactionIcon();
+    const StatusIcon = getStatusIcon();
+
+    const handleCopyId = async () => {
+        await navigator.clipboard.writeText(
+            transaction.id,
+        );
     };
 
     return (
-        <div>
+        <div className="space-y-6">
             <button
                 type="button"
-                onClick={() => navigate("/transactions")}
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                onClick={() =>
+                    navigate("/transactions")
+                }
+                className="group inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-950"
             >
-                ← Back to transactions
+                <ArrowLeft
+                    className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+                    aria-hidden="true"
+                />
+                Back to transactions
             </button>
 
-            <div className="mt-5">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-                    Transaction details
-                </h1>
+            <div className="max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div className="relative overflow-hidden bg-slate-950 px-6 py-8 text-white sm:px-8 sm:py-10">
+                    <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/4 -translate-y-1/4 rounded-full bg-indigo-500/10 blur-3xl" />
 
-                <p className="mt-1 text-sm text-slate-500">
-                    View the details of this transaction.
-                </p>
-            </div>
+                    <div className="relative">
+                        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex items-start gap-4">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
+                                    <TransactionIcon
+                                        className="h-5 w-5"
+                                        aria-hidden="true"
+                                    />
+                                </div>
 
-            <div className="mt-6 max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-sm text-slate-500">Transaction amount</p>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                        Transaction
+                                    </p>
 
-                            <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-                                {formattedAmount} {transaction.currency}
-                            </p>
+                                    <h1 className="mt-1 text-xl font-semibold tracking-tight">
+                                        {typeLabels[
+                                                transaction
+                                                    .type
+                                                ] ??
+                                            transaction.type}
+                                    </h1>
+
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        {createdAt}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <span
+                                className={[
+                                    "inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1",
+                                    getStatusStyle(),
+                                ].join(" ")}
+                            >
+                                <StatusIcon
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                />
+                                {statusLabels[
+                                        transaction.status
+                                        ] ??
+                                    transaction.status}
+                            </span>
                         </div>
 
-                        <span
-                            className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-                                statusClassName[transaction.status] ??
-                                "bg-slate-100 text-slate-700"
-                            }`}
-                        >
-              {statusLabels[transaction.status] ?? transaction.status}
-            </span>
+                        <div className="mt-10">
+                            <p className="text-sm text-slate-400">
+                                Transaction amount
+                            </p>
+
+                            <p
+                                className={[
+                                    "mt-1 text-4xl font-bold tracking-tight sm:text-5xl",
+                                    getAmountColor(),
+                                ].join(" ")}
+                            >
+                                {formattedAmount}{" "}
+                                <span className="text-base font-semibold text-slate-400">
+                                    {transaction.currency}
+                                </span>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="grid gap-x-8 gap-y-6 px-6 py-6 sm:grid-cols-2">
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Type
-                        </p>
+                <div className="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <ReceiptText
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 text-sm font-medium text-slate-900">
-                            {typeLabels[transaction.type] ?? transaction.type}
-                        </p>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                Type
+                            </p>
+
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {typeLabels[
+                                        transaction.type
+                                        ] ??
+                                    transaction.type}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Currency
-                        </p>
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <WalletCards
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 text-sm font-medium text-slate-900">
-                            {transaction.currency}
-                        </p>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                Currency
+                            </p>
+
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {transaction.currency}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            From account
-                        </p>
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <ArrowUpRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 break-all text-sm font-medium text-slate-900">
-                            {transaction.fromAccountId ?? "—"}
-                        </p>
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                From account
+                            </p>
+
+                            <p className="mt-1 break-all font-mono text-xs font-medium text-slate-800">
+                                {transaction.fromAccountId ??
+                                    "—"}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            To account
-                        </p>
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <ArrowDownLeft
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 break-all text-sm font-medium text-slate-900">
-                            {transaction.toAccountId ?? "—"}
-                        </p>
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                To account
+                            </p>
+
+                            <p className="mt-1 break-all font-mono text-xs font-medium text-slate-800">
+                                {transaction.toAccountId ??
+                                    "—"}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Description
-                        </p>
+                        <div className="rounded-2xl bg-slate-50 p-5">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-slate-600 shadow-sm">
+                                    <FileText
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                </div>
 
-                        <p className="mt-1 text-sm text-slate-900">
-                            {transaction.description || "No description"}
-                        </p>
+                                <p className="text-sm font-semibold text-slate-900">
+                                    Description
+                                </p>
+                            </div>
+
+                            <p className="mt-4 text-sm leading-6 text-slate-600">
+                                {transaction.description ||
+                                    "No description"}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Created
-                        </p>
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <CalendarDays
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 text-sm text-slate-900">
-                            {createdAt}
-                        </p>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                Created
+                            </p>
+
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {createdAt}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Last updated
-                        </p>
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <Clock3
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
+                        </div>
 
-                        <p className="mt-1 text-sm text-slate-900">
-                            {updatedAt}
-                        </p>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                                Last updated
+                            </p>
+
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {updatedAt}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Transaction ID
-                        </p>
+                        <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Transaction ID
+                                </p>
 
-                        <p className="mt-1 break-all font-mono text-xs text-slate-600">
-                            {transaction.id}
-                        </p>
+                                <p className="mt-1 truncate font-mono text-xs text-slate-600">
+                                    {transaction.id}
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleCopyId}
+                                aria-label="Copy transaction ID"
+                                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                            >
+                                <Copy
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
