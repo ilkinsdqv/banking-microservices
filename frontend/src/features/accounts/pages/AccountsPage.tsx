@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Button, EmptyState, ErrorState, Skeleton } from "../../../components/ui";
 import { useAuth } from "../../auth/hooks/use-auth";
 import AccountCard from "../components/AccountCard";
 import CashInModal from "../components/CashInModal";
@@ -11,7 +12,9 @@ import type { Account } from "../types/account";
 function AccountsPage() {
     const { user } = useAuth();
 
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] =
+        useState(false);
+
     const [selectedAccount, setSelectedAccount] =
         useState<Account | null>(null);
 
@@ -19,20 +22,36 @@ function AccountsPage() {
         data: accounts,
         isLoading,
         isError,
+        refetch,
     } = useAccounts(user?.id ?? null);
 
     if (isLoading) {
         return (
-            <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
-                    Accounts
-                </h1>
+            <div className="space-y-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-2">
+                        <Skeleton
+                            width="140px"
+                            height="32px"
+                        />
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {[1, 2].map((item) => (
-                        <div
+                        <Skeleton
+                            width="280px"
+                            height="20px"
+                        />
+                    </div>
+
+                    <Skeleton
+                        width="150px"
+                        height="40px"
+                    />
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {[1, 2, 3].map((item) => (
+                        <Skeleton
                             key={item}
-                            className="h-48 animate-pulse rounded-2xl bg-slate-200"
+                            className="h-48 w-full rounded-2xl"
                         />
                     ))}
                 </div>
@@ -42,24 +61,32 @@ function AccountsPage() {
 
     if (isError) {
         return (
-            <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
-                    Accounts
-                </h1>
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+                        Accounts
+                    </h1>
 
-                <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                    Hesabları yükləmək mümkün olmadı.
+                    <p className="mt-1 text-sm text-slate-500">
+                        Manage your bank accounts and balances.
+                    </p>
                 </div>
+
+                <ErrorState
+                    title="Unable to load accounts"
+                    description="We couldn't retrieve your bank accounts. Please try again."
+                    onRetry={() => refetch()}
+                />
             </div>
         );
     }
 
     return (
         <>
-            <div>
+            <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-900">
+                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                             Accounts
                         </h1>
 
@@ -68,17 +95,17 @@ function AccountsPage() {
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    <Button
+                        onClick={() =>
+                            setIsCreateModalOpen(true)
+                        }
                     >
                         + Create account
-                    </button>
+                    </Button>
                 </div>
 
                 {accounts && accounts.length > 0 ? (
-                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                         {accounts.map((account) => (
                             <AccountCard
                                 key={account.id}
@@ -88,39 +115,43 @@ function AccountsPage() {
                         ))}
                     </div>
                 ) : (
-                    <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-                        <h2 className="text-lg font-semibold text-slate-900">
-                            No accounts yet
-                        </h2>
-
-                        <p className="mt-1 text-sm text-slate-500">
-                            Create your first bank account to get started.
-                        </p>
-
-                        <button
-                            type="button"
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="mt-5 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                        >
-                            Create your first account
-                        </button>
-                    </div>
+                    <EmptyState
+                        title="No accounts yet"
+                        description="Create your first bank account to get started."
+                        action={
+                            <Button
+                                onClick={() =>
+                                    setIsCreateModalOpen(true)
+                                }
+                            >
+                                Create your first account
+                            </Button>
+                        }
+                    />
                 )}
             </div>
 
             <CreateAccountModal
                 open={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                onClose={() =>
+                    setIsCreateModalOpen(false)
+                }
             >
                 <CreateAccountForm
-                    onSuccess={() => setIsCreateModalOpen(false)}
-                    onCancel={() => setIsCreateModalOpen(false)}
+                    onSuccess={() =>
+                        setIsCreateModalOpen(false)
+                    }
+                    onCancel={() =>
+                        setIsCreateModalOpen(false)
+                    }
                 />
             </CreateAccountModal>
 
             <CashInModal
                 account={selectedAccount}
-                onClose={() => setSelectedAccount(null)}
+                onClose={() =>
+                    setSelectedAccount(null)
+                }
             />
         </>
     );

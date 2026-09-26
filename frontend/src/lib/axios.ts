@@ -8,6 +8,11 @@ import { accessTokenStore } from "../features/auth/api/access-token";
 import { authApi } from "../features/auth/api/auth-api";
 import { tokenStorage } from "../features/auth/api/token-storage";
 
+interface RetryableRequestConfig
+    extends InternalAxiosRequestConfig {
+    _retry?: boolean;
+}
+
 export const apiClient = axios.create({
     baseURL: env.apiBaseUrl,
     headers: {
@@ -33,9 +38,20 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        const originalRequest = error.config;
+        const originalRequest =
+            error.config as RetryableRequestConfig | undefined;
 
-        if (!originalRequest || error.response?.status !== 401) {
+        if (
+            !originalRequest ||
+            error.response?.status !== 401
+        ) {
+            return Promise.reject(error);
+        }
+
+        if (originalRequest._retry) {
+            tokenStorage.clearRefreshToken();
+            accessTokenStore.clear();
+
             return Promise.reject(error);
         }
 
@@ -43,8 +59,11 @@ apiClient.interceptors.response.use(
 
         if (!refreshToken) {
             accessTokenStore.clear();
+
             return Promise.reject(error);
         }
+
+        originalRequest._retry = true;
 
         if (!refreshPromise) {
             refreshPromise = authApi
@@ -52,8 +71,13 @@ apiClient.interceptors.response.use(
                     refreshToken,
                 })
                 .then((response) => {
-                    accessTokenStore.set(response.accessToken);
-                    tokenStorage.setRefreshToken(response.refreshToken);
+                    accessTokenStore.set(
+                        response.accessToken,
+                    );
+
+                    tokenStorage.setRefreshToken(
+                        response.refreshToken,
+                    );
 
                     return response.accessToken;
                 })
@@ -63,9 +87,11 @@ apiClient.interceptors.response.use(
         }
 
         try {
-            const newAccessToken = await refreshPromise;
+            const newAccessToken =
+                await refreshPromise;
 
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            originalRequest.headers.Authorization =
+                `Bearer ${newAccessToken}`;
 
             return apiClient(originalRequest);
         } catch (refreshError) {
