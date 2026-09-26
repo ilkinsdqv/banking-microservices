@@ -1,7 +1,18 @@
+import {
+    Banknote,
+    ChevronDown,
+    CircleDollarSign,
+    CreditCard,
+    FilePlus2,
+    Percent,
+    ShieldCheck,
+    WalletCards,
+} from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Button, Input } from "../../../components/ui";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useAccounts } from "../../accounts/hooks/use-accounts";
 import { useCreateLoan } from "../hooks/use-create-loan";
@@ -79,228 +90,301 @@ function CreateLoanForm({
 
     if (!user) {
         return (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                <p className="text-sm text-red-700">
-                    User session could not be restored.
-                </p>
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                    <ShieldCheck className="h-4 w-4 text-red-600" />
+                </div>
+
+                <div>
+                    <p className="text-sm font-semibold text-red-800">
+                        User session could not be restored.
+                    </p>
+
+                    <p className="mt-1 text-xs text-red-600">
+                        Please sign in again and try submitting the application.
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (isAccountsLoading) {
         return (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">
-                    Loading your accounts...
-                </p>
+            <div className="space-y-5">
+                <div className="space-y-2">
+                    <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                    <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                </div>
+
+                <div className="space-y-2">
+                    <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                    <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+                    <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+                </div>
+
+                <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
             </div>
         );
     }
 
     if (isAccountsError) {
         return (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                <p className="text-sm font-medium text-red-800">
-                    Could not load your accounts.
-                </p>
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                    <WalletCards className="h-4 w-4 text-red-600" />
+                </div>
 
-                <p className="mt-1 text-sm text-red-600">
-                    Please try again later.
-                </p>
+                <div>
+                    <p className="text-sm font-semibold text-red-800">
+                        Could not load your accounts.
+                    </p>
+
+                    <p className="mt-1 text-xs text-red-600">
+                        Please try again later.
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (!accounts || accounts.length === 0) {
         return (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <h3 className="font-semibold text-amber-900">
-                    No accounts available
-                </h3>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+                <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                        <WalletCards className="h-5 w-5 text-amber-700" />
+                    </div>
 
-                <p className="mt-1 text-sm text-amber-700">
-                    You need an account before applying for a loan.
-                </p>
+                    <div>
+                        <h3 className="font-semibold text-slate-900">
+                            No accounts available
+                        </h3>
+
+                        <p className="mt-1 text-sm leading-5 text-slate-600">
+                            You need an account before applying for a loan.
+                        </p>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-                <label
-                    htmlFor="loan-account"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                    Loan account
-                </label>
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+        >
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+                        <WalletCards className="h-4 w-4 text-slate-600" />
+                    </div>
 
-                <select
-                    id="loan-account"
-                    {...register("accountId")}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                >
-                    <option value="">Select an account</option>
+                    <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                            Loan account
+                        </p>
 
-                    {accounts.map((account) => (
-                        <option key={account.id} value={account.id}>
-                            {account.iban} — {account.balance.toFixed(2)}{" "}
-                            {account.currency}
-                        </option>
-                    ))}
-                </select>
+                        <p className="text-xs text-slate-500">
+                            Select the account associated with this loan.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <WalletCards className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <select
+                        id="loan-account"
+                        disabled={createLoan.isPending}
+                        {...register("accountId")}
+                        className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm font-medium text-slate-800 outline-none transition hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    >
+                        <option value="">Select an account</option>
+
+                        {accounts.map((account) => (
+                            <option
+                                key={account.id}
+                                value={account.id}
+                            >
+                                {account.iban} —{" "}
+                                {account.balance.toFixed(2)}{" "}
+                                {account.currency}
+                            </option>
+                        ))}
+                    </select>
+
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                </div>
 
                 {errors.accountId && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1.5 text-xs font-medium text-red-600">
                         {errors.accountId.message}
                     </p>
                 )}
             </div>
 
-            <div>
-                <label
-                    htmlFor="principal-amount"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                    Loan amount
-                </label>
-
-                <input
-                    id="principal-amount"
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                    label="Loan amount"
                     type="number"
                     min="100"
                     step="0.01"
                     placeholder="1000.00"
+                    disabled={createLoan.isPending}
+                    leftElement={
+                        <CircleDollarSign className="h-4 w-4" />
+                    }
+                    error={errors.principalAmount?.message}
                     {...register("principalAmount", {
                         valueAsNumber: true,
                     })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                 />
 
-                {errors.principalAmount && (
-                    <p className="mt-1 text-sm text-red-600">
-                        {errors.principalAmount.message}
-                    </p>
-                )}
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label
-                        htmlFor="interest-rate"
+                        htmlFor="loan-currency"
                         className="mb-2 block text-sm font-medium text-slate-700"
                     >
-                        Interest rate (%)
+                        Currency
                     </label>
 
-                    <input
-                        id="interest-rate"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="12.5"
-                        {...register("interestRate", {
-                            valueAsNumber: true,
-                        })}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                    <Controller
+                        name="currency"
+                        control={control}
+                        render={({ field }) => (
+                            <div className="relative">
+                                <CircleDollarSign className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                <select
+                                    {...field}
+                                    id="loan-currency"
+                                    disabled={createLoan.isPending}
+                                    className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm font-semibold text-slate-800 outline-none transition hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                >
+                                    <option value="AZN">AZN</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+
+                                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            </div>
+                        )}
                     />
 
-                    {errors.interestRate && (
-                        <p className="mt-1 text-sm text-red-600">
-                            {errors.interestRate.message}
-                        </p>
-                    )}
-                </div>
-
-                <div>
-                    <label
-                        htmlFor="term-months"
-                        className="mb-2 block text-sm font-medium text-slate-700"
-                    >
-                        Term (months)
-                    </label>
-
-                    <input
-                        id="term-months"
-                        type="number"
-                        min="1"
-                        max="120"
-                        step="1"
-                        placeholder="12"
-                        {...register("termMonths", {
-                            valueAsNumber: true,
-                        })}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                    />
-
-                    {errors.termMonths && (
-                        <p className="mt-1 text-sm text-red-600">
-                            {errors.termMonths.message}
+                    {errors.currency && (
+                        <p className="mt-1.5 text-xs font-medium text-red-600">
+                            {errors.currency.message}
                         </p>
                     )}
                 </div>
             </div>
 
-            <div>
-                <label
-                    htmlFor="loan-currency"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                    Currency
-                </label>
-
-                <Controller
-                    name="currency"
-                    control={control}
-                    render={({ field }) => (
-                        <select
-                            {...field}
-                            id="loan-currency"
-                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                        >
-                            <option value="AZN">AZN</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                        </select>
-                    )}
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                    label="Interest rate"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="12.5"
+                    disabled={createLoan.isPending}
+                    leftElement={
+                        <Percent className="h-4 w-4" />
+                    }
+                    rightElement="%"
+                    error={errors.interestRate?.message}
+                    {...register("interestRate", {
+                        valueAsNumber: true,
+                    })}
                 />
 
-                {errors.currency && (
-                    <p className="mt-1 text-sm text-red-600">
-                        {errors.currency.message}
-                    </p>
-                )}
+                <Input
+                    label="Term"
+                    type="number"
+                    min="1"
+                    max="120"
+                    step="1"
+                    placeholder="12"
+                    disabled={createLoan.isPending}
+                    leftElement={
+                        <CalendarIcon />
+                    }
+                    rightElement="months"
+                    error={errors.termMonths?.message}
+                    {...register("termMonths", {
+                        valueAsNumber: true,
+                    })}
+                />
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+
+                <p className="text-xs leading-5 text-slate-600">
+                    Review the loan amount, interest rate and repayment term
+                    carefully before submitting your application.
+                </p>
             </div>
 
             {createLoan.isError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                    <p className="text-sm text-red-700">
-                        Could not create the loan. Please check your information and try
-                        again.
-                    </p>
+                <div
+                    role="alert"
+                    className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+                >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                        <Banknote className="h-4 w-4 text-red-600" />
+                    </div>
+
+                    <div>
+                        <p className="text-sm font-semibold text-red-800">
+                            Could not create the loan
+                        </p>
+
+                        <p className="mt-0.5 text-sm text-red-700">
+                            Please check your information and try again.
+                        </p>
+                    </div>
                 </div>
             )}
 
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={onCancel}
                     disabled={createLoan.isPending}
-                    className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     Cancel
-                </button>
+                </Button>
 
-                <button
+                <Button
                     type="submit"
                     disabled={createLoan.isPending}
-                    className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-w-40"
                 >
-                    {createLoan.isPending ? "Submitting..." : "Apply for loan"}
-                </button>
+                    {createLoan.isPending ? (
+                        <>
+                            <Banknote className="h-4 w-4 animate-pulse" />
+                            Submitting...
+                        </>
+                    ) : (
+                        <>
+                            <FilePlus2 className="h-4 w-4" />
+                            Apply for loan
+                        </>
+                    )}
+                </Button>
             </div>
         </form>
     );
+}
+
+function CalendarIcon() {
+    return <CreditCard className="h-4 w-4" />;
 }
 
 export default CreateLoanForm;

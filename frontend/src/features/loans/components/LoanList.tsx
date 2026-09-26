@@ -1,3 +1,12 @@
+import {
+    ArrowUpRight,
+    Banknote,
+    CalendarDays,
+    ChevronRight,
+    CircleDollarSign,
+    Clock3,
+    CreditCard,
+} from "lucide-react";
 import { useNavigate } from "react-router";
 
 import type { Loan } from "../types/loan";
@@ -21,12 +30,16 @@ function LoanList({ loans }: LoanListProps) {
 
     if (loans.length === 0) {
         return (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                <h3 className="text-base font-semibold text-slate-900">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                    <Banknote className="h-6 w-6 text-slate-400" />
+                </div>
+
+                <h3 className="mt-4 text-base font-semibold text-slate-900">
                     No loans yet
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 max-w-sm text-sm leading-5 text-slate-500">
                     You do not have any loan applications.
                 </p>
             </div>
@@ -34,85 +47,104 @@ function LoanList({ loans }: LoanListProps) {
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px]">
-                    <thead className="border-b border-slate-200 bg-slate-50">
-                    <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Loan
-                        </th>
+        <div className="space-y-3">
+            {loans.map((loan) => (
+                <button
+                    key={loan.id}
+                    type="button"
+                    onClick={() => navigate(`/loans/${loan.id}`)}
+                    className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 sm:p-5"
+                >
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+                        <div className="flex min-w-0 flex-1 items-center gap-4">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50">
+                                <CreditCard className="h-5 w-5 text-indigo-600" />
+                            </div>
 
-                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Principal
-                        </th>
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-semibold text-slate-900">
+                                        {loan.termMonths} months
+                                    </p>
 
-                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Monthly payment
-                        </th>
+                                    <span
+                                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                            loanStatusClasses[loan.status]
+                                        }`}
+                                    >
+                                        {loanStatusLabels[loan.status]}
+                                    </span>
+                                </div>
 
-                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Remaining
-                        </th>
-
-                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Status
-                        </th>
-                    </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-slate-100">
-                    {loans.map((loan) => (
-                        <tr
-                            key={loan.id}
-                            onClick={() => navigate(`/loans/${loan.id}`)}
-                            className="cursor-pointer transition hover:bg-slate-50"
-                        >
-                            <td className="px-6 py-4">
-                                <p className="font-medium text-slate-900">
-                                    {loan.termMonths} months
-                                </p>
-
-                                <p className="mt-1 font-mono text-xs text-slate-400">
+                                <p className="mt-1 truncate font-mono text-xs text-slate-400">
                                     {loan.id}
                                 </p>
-                            </td>
+                            </div>
+                        </div>
 
-                            <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                                {formatMoney(
-                                    loan.principalAmount,
-                                    loan.currency,
-                                )}
-                            </td>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:flex lg:items-center">
+                            <div>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                                    <CircleDollarSign className="h-3.5 w-3.5" />
+                                    Principal
+                                </div>
 
-                            <td className="px-6 py-4 text-sm text-slate-700">
-                                {formatMoney(
-                                    loan.monthlyPayment,
-                                    loan.currency,
-                                )}
-                            </td>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
+                                    {formatMoney(
+                                        loan.principalAmount,
+                                        loan.currency,
+                                    )}
+                                </p>
+                            </div>
 
-                            <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                                {formatMoney(
-                                    loan.remainingAmount,
-                                    loan.currency,
-                                )}
-                            </td>
+                            <div>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                    Monthly
+                                </div>
 
-                            <td className="px-6 py-4">
-                  <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          loanStatusClasses[loan.status]
-                      }`}
-                  >
-                    {loanStatusLabels[loan.status]}
-                  </span>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
+                                    {formatMoney(
+                                        loan.monthlyPayment,
+                                        loan.currency,
+                                    )}
+                                </p>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                                    <Clock3 className="h-3.5 w-3.5" />
+                                    Remaining
+                                </div>
+
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
+                                    {formatMoney(
+                                        loan.remainingAmount,
+                                        loan.currency,
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center justify-end border-t border-slate-100 pt-3 lg:border-0 lg:pt-0">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition group-hover:bg-slate-900 group-hover:text-white">
+                                <ChevronRight className="h-4 w-4" />
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                        <span className="text-xs text-slate-400">
+                            View loan details
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition group-hover:text-slate-900">
+                            Open
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                        </span>
+                    </div>
+                </button>
+            ))}
         </div>
     );
 }
