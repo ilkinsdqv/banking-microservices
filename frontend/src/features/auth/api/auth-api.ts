@@ -7,6 +7,7 @@ import type {
     LoginRequest,
     LoginResponse,
     RefreshTokenRequest,
+    RegisterRequest,
 } from "../types/auth";
 
 const authClient = axios.create({
@@ -18,6 +19,10 @@ const authClient = axios.create({
 });
 
 export const authApi = {
+    register: async (request: RegisterRequest): Promise<void> => {
+        await authClient.post("/api/v1/users", request);
+    },
+
     login: async (request: LoginRequest): Promise<LoginResponse> => {
         const response = await authClient.post<LoginResponse>(
             "/api/v1/auth/login",

@@ -3,6 +3,16 @@ export interface LoginRequest {
     password: string;
 }
 
+export interface RegisterRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    fin: string;
+    phoneNumber: string;
+    birthDate: string;
+}
+
 export interface RefreshTokenRequest {
     refreshToken: string;
 }
