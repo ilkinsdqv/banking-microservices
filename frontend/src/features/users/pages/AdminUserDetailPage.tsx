@@ -1,10 +1,27 @@
-import {useNavigate, useParams} from "react-router";
+import {
+    ArrowLeft,
+    CalendarDays,
+    CheckCircle2,
+    Edit3,
+    Fingerprint,
+    Mail,
+    Phone,
+    ShieldCheck,
+    UserRound,
+    XCircle,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router";
 
-import {useAuth} from "../../auth/hooks/use-auth";
+import {
+    Button,
+    Card,
+    ErrorState,
+    Skeleton,
+} from "../../../components/ui";
+import { useAuth } from "../../auth/hooks/use-auth";
 import UserActions from "../components/UserActions";
-
-import {useUser} from "../hooks/use-user";
 import UserStatusBadge from "../components/UserStatusBadge";
+import { useUser } from "../hooks/use-user";
 
 function getRoleLabel(role: string): string {
     switch (role) {
@@ -21,50 +38,38 @@ function getRoleLabel(role: string): string {
 
 export default function AdminUserDetailPage() {
     const navigate = useNavigate();
-    const {id} = useParams<{ id: string }>();
-    const {user: currentUser} = useAuth();
+    const { id } = useParams<{ id: string }>();
+    const { user: currentUser } = useAuth();
 
     const {
         data: user,
         isLoading,
         isError,
+        refetch,
     } = useUser(id);
-
-
 
     if (isLoading) {
         return (
             <div className="space-y-6">
-                <div className="h-8 w-48 animate-pulse rounded bg-muted"/>
-                <div className="h-80 animate-pulse rounded-xl bg-muted"/>
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-48 rounded-3xl" />
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <Skeleton className="h-96 rounded-2xl lg:col-span-2" />
+                    <Skeleton className="h-96 rounded-2xl" />
+                </div>
             </div>
         );
     }
 
     if (isError || !user) {
         return (
-            <div className="space-y-6">
-                <button
-                    type="button"
-                    onClick={() => navigate("/admin/users")}
-                    className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                    ← Back to users
-                </button>
-
-                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-                    <h2 className="font-semibold">
-                        User could not be loaded
-                    </h2>
-
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        The requested user does not exist or could not be retrieved.
-                    </p>
-                </div>
-            </div>
+            <ErrorState
+                title="User could not be loaded"
+                description="The requested user does not exist or could not be retrieved."
+                onRetry={() => refetch()}
+            />
         );
     }
-
 
     const isOwnAccount = currentUser?.id === user.id;
 
@@ -73,147 +78,199 @@ export default function AdminUserDetailPage() {
             <button
                 type="button"
                 onClick={() => navigate("/admin/users")}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-950"
             >
-                ← Back to users
+                <ArrowLeft className="h-4 w-4" />
+                Back to users
             </button>
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        User details
-                    </h1>
+            <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
+                <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Manage user account information and status.
-                    </p>
-                </div>
+                <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
+                            <UserRound className="h-7 w-7" />
+                        </div>
 
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate(`/admin/users/${user.id}/edit`)
-                    }
-                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                    Edit user
-                </button>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-3">
-                <div className="rounded-xl border bg-card p-6 shadow-sm lg:col-span-2">
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Full name
+                        <div className="min-w-0">
+                            <p className="text-sm text-slate-400">
+                                User details
                             </p>
 
-                            <h2 className="mt-1 text-xl font-semibold">
+                            <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight sm:text-3xl">
                                 {user.firstName} {user.lastName}
-                            </h2>
+                            </h1>
 
-                            <p className="mt-1 text-sm text-muted-foreground">
+                            <p className="mt-1 truncate text-sm text-slate-400">
+                                {user.email}
+                            </p>
+                        </div>
+                    </div>
+
+                    <Button
+                        type="button"
+                        className="text-slate-950 hover:bg-slate-100"
+                        onClick={() =>
+                            navigate(`/admin/users/${user.id}/edit`)
+                        }
+                    >
+                        <Edit3 className="h-4 w-4" />
+                        Edit user
+                    </Button>
+                </div>
+            </section>
+
+            <div className="grid gap-6 lg:grid-cols-3">
+                <Card className="overflow-hidden p-0 lg:col-span-2">
+                    <div className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Profile
+                            </p>
+
+                            <h2 className="mt-2 text-lg font-semibold text-slate-950">
+                                Personal information
+                            </h2>
+                        </div>
+
+                        <UserStatusBadge user={user} />
+                    </div>
+
+                    <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                First name
+                            </p>
+                            <p className="mt-2 font-medium text-slate-900">
+                                {user.firstName}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Last name
+                            </p>
+                            <p className="mt-2 font-medium text-slate-900">
+                                {user.lastName}
+                            </p>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-slate-400" />
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Email
+                                </p>
+                            </div>
+                            <p className="mt-2 break-all font-medium text-slate-900">
                                 {user.email}
                             </p>
                         </div>
 
-                        <UserStatusBadge user={user}/>
-                    </div>
-
-                    <div className="mt-8 grid gap-6 sm:grid-cols-2">
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                First name
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-slate-400" />
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Phone
+                                </p>
+                            </div>
+                            <p className="mt-2 font-medium text-slate-900">
+                                {user.phoneNumber}
                             </p>
-
-                            <p className="mt-1">{user.firstName}</p>
                         </div>
 
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Last name
-                            </p>
-
-                            <p className="mt-1">{user.lastName}</p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Email
-                            </p>
-
-                            <p className="mt-1 break-all">{user.email}</p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Phone number
-                            </p>
-
-                            <p className="mt-1">{user.phoneNumber}</p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                FIN
-                            </p>
-
-                            <p className="mt-1 font-mono">
+                            <div className="flex items-center gap-2">
+                                <Fingerprint className="h-4 w-4 text-slate-400" />
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    FIN
+                                </p>
+                            </div>
+                            <p className="mt-2 font-mono font-medium text-slate-900">
                                 {user.fin}
                             </p>
                         </div>
 
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Birth date
+                            <div className="flex items-center gap-2">
+                                <CalendarDays className="h-4 w-4 text-slate-400" />
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Birth date
+                                </p>
+                            </div>
+                            <p className="mt-2 font-medium text-slate-900">
+                                {user.birthDate}
                             </p>
-
-                            <p className="mt-1">{user.birthDate}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 <div className="space-y-6">
-                    <div className="rounded-xl border bg-card p-6 shadow-sm">
-                        <h2 className="font-semibold">
-                            Account status
-                        </h2>
+                    <Card style={{ padding: "1.5rem" }}>
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-5 w-5 text-slate-600" />
+                            <h2 className="font-semibold text-slate-950">
+                                Account status
+                            </h2>
+                        </div>
 
                         <div className="mt-5 space-y-4">
                             <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-muted-foreground">
-                  Enabled
-                </span>
+                                <span className="text-sm text-slate-500">
+                                    Enabled
+                                </span>
 
-                                <span className="text-sm font-medium">
-                  {user.enabled ? "Yes" : "No"}
-                </span>
+                                <div className="flex items-center gap-2">
+                                    {user.enabled ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <XCircle className="h-4 w-4 text-red-600" />
+                                    )}
+                                    <span className="text-sm font-semibold text-slate-900">
+                                        {user.enabled ? "Yes" : "No"}
+                                    </span>
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-muted-foreground">
-                  Account locked
-                </span>
-
-                                <span className="text-sm font-medium">
-                                  {user.accountLocked ? "Yes" : "No"}
+                                <span className="text-sm text-slate-500">
+                                    Account locked
                                 </span>
+
+                                <div className="flex items-center gap-2">
+                                    {user.accountLocked ? (
+                                        <XCircle className="h-4 w-4 text-red-600" />
+                                    ) : (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    )}
+                                    <span className="text-sm font-semibold text-slate-900">
+                                        {user.accountLocked ? "Yes" : "No"}
+                                    </span>
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between gap-4">
-                                <span className="text-sm text-muted-foreground">
-                                  Email verified
+                                <span className="text-sm text-slate-500">
+                                    Email verified
                                 </span>
 
-                                <span className="text-sm font-medium">
-                                  {user.emailVerified ? "Yes" : "No"}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    {user.emailVerified ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <XCircle className="h-4 w-4 text-amber-600" />
+                                    )}
+                                    <span className="text-sm font-semibold text-slate-900">
+                                        {user.emailVerified ? "Yes" : "No"}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
-                    <div className="rounded-xl border bg-card p-6 shadow-sm">
-                        <h2 className="font-semibold">
+                    <Card style={{ padding: "1.5rem" }}>
+                        <h2 className="font-semibold text-slate-950">
                             Roles
                         </h2>
 
@@ -221,13 +278,14 @@ export default function AdminUserDetailPage() {
                             {user.roles.map((role) => (
                                 <span
                                     key={role}
-                                    className="rounded-full bg-muted px-3 py-1 text-xs font-medium"
+                                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
                                 >
-                                  {getRoleLabel(role)}
+                                    {getRoleLabel(role)}
                                 </span>
                             ))}
                         </div>
-                    </div>
+                    </Card>
+
                     <UserActions
                         user={user}
                         isOwnAccount={isOwnAccount}

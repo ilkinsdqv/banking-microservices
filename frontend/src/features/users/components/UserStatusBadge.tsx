@@ -1,3 +1,9 @@
+import {
+    CheckCircle2,
+    LockKeyhole,
+    PowerOff,
+} from "lucide-react";
+
 import type { User } from "../types/user";
 
 interface UserStatusBadgeProps {
@@ -9,23 +15,26 @@ export default function UserStatusBadge({
                                         }: UserStatusBadgeProps) {
     if (user.accountLocked) {
         return (
-            <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-        Locked
-      </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
+                <LockKeyhole className="h-3.5 w-3.5" />
+                Locked
+            </span>
         );
     }
 
     if (!user.enabled) {
         return (
-            <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-        Disabled
-      </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+                <PowerOff className="h-3.5 w-3.5" />
+                Disabled
+            </span>
         );
     }
 
     return (
-        <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-      Active
-    </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Active
+        </span>
     );
 }

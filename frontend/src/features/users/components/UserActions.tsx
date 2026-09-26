@@ -1,5 +1,14 @@
+import {
+    Lock,
+    LockOpen,
+    Power,
+    PowerOff,
+    Trash2,
+    TriangleAlert,
+} from "lucide-react";
 import { useNavigate } from "react-router";
 
+import { Button } from "../../../components/ui";
 import type { User } from "../types/user";
 import {
     useDeleteUser,
@@ -35,9 +44,20 @@ export default function UserActions({
 
     if (isOwnAccount) {
         return (
-            <div className="rounded-lg border border-yellow-300/50 bg-yellow-50 p-4 text-sm text-yellow-800">
-                Your own account cannot be disabled, locked or deleted
-                from the admin panel.
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                <div className="flex gap-3">
+                    <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+
+                    <div>
+                        <p className="text-sm font-semibold text-amber-900">
+                            Protected account
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-amber-800">
+                            Your own account cannot be disabled, locked or
+                            deleted from the admin panel.
+                        </p>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -91,70 +111,86 @@ export default function UserActions({
     };
 
     return (
-        <div className="space-y-4">
-            <h2 className="font-semibold">
-                Account actions
-            </h2>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-5">
+                <h2 className="text-base font-semibold text-slate-950">
+                    Account actions
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                    Manage access and account state.
+                </p>
+            </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="space-y-3 p-5">
                 {user.enabled ? (
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         disabled={isPending}
                         onClick={handleDisable}
-                        className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full justify-start"
                     >
+                        <PowerOff className="h-4 w-4" />
                         {disableUser.isPending
                             ? "Disabling..."
-                            : "Disable"}
-                    </button>
+                            : "Disable account"}
+                    </Button>
                 ) : (
-                    <button
+                    <Button
                         type="button"
                         disabled={isPending}
                         onClick={handleEnable}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full justify-start"
                     >
+                        <Power className="h-4 w-4" />
                         {enableUser.isPending
                             ? "Enabling..."
-                            : "Enable"}
-                    </button>
+                            : "Enable account"}
+                    </Button>
                 )}
 
                 {user.accountLocked ? (
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         disabled={isPending}
                         onClick={handleUnlock}
-                        className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full justify-start"
                     >
+                        <LockOpen className="h-4 w-4" />
                         {unlockUser.isPending
                             ? "Unlocking..."
-                            : "Unlock"}
-                    </button>
+                            : "Unlock account"}
+                    </Button>
                 ) : (
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         disabled={isPending}
                         onClick={handleLock}
-                        className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full justify-start"
                     >
+                        <Lock className="h-4 w-4" />
                         {lockUser.isPending
                             ? "Locking..."
-                            : "Lock"}
-                    </button>
+                            : "Lock account"}
+                    </Button>
                 )}
 
-                <button
+                <div className="my-2 border-t border-slate-100" />
+
+                <Button
                     type="button"
+                    variant="danger"
                     disabled={isPending}
                     onClick={handleDelete}
-                    className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full justify-start"
                 >
+                    <Trash2 className="h-4 w-4" />
                     {deleteUser.isPending
                         ? "Deleting..."
                         : "Delete user"}
-                </button>
+                </Button>
             </div>
         </div>
     );

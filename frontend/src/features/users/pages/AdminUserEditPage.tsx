@@ -1,7 +1,20 @@
+import {
+    ArrowLeft,
+    CheckCircle2,
+    Phone,
+    Save,
+    UserRound,
+} from "lucide-react";
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
 import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router";
 
+import {
+    Button,
+    ErrorState,
+    Input,
+    Skeleton,
+} from "../../../components/ui";
 import { useUser } from "../hooks/use-user";
 import { useUpdateUser } from "../hooks/use-user-actions";
 import type { UpdateUserRequest } from "../types/user";
@@ -14,6 +27,7 @@ export default function AdminUserEditPage() {
         data: user,
         isLoading,
         isError,
+        refetch,
     } = useUser(id);
 
     const updateUser = useUpdateUser();
@@ -37,34 +51,21 @@ export default function AdminUserEditPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-6">
-                <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-                <div className="h-80 animate-pulse rounded-xl bg-muted" />
+            <div className="mx-auto max-w-3xl space-y-6">
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-40 rounded-3xl" />
+                <Skeleton className="h-96 rounded-2xl" />
             </div>
         );
     }
 
     if (isError || !user || !id) {
         return (
-            <div className="space-y-6">
-                <button
-                    type="button"
-                    onClick={() => navigate("/admin/users")}
-                    className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                    ← Back to users
-                </button>
-
-                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-                    <h2 className="font-semibold">
-                        User could not be loaded
-                    </h2>
-
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        The requested user does not exist or could not be retrieved.
-                    </p>
-                </div>
-            </div>
+            <ErrorState
+                title="User could not be loaded"
+                description="The requested user does not exist or could not be retrieved."
+                onRetry={() => refetch()}
+            />
         );
     }
 
@@ -83,40 +84,57 @@ export default function AdminUserEditPage() {
     };
 
     return (
-        <div className="mx-auto max-w-2xl space-y-6">
+        <div className="mx-auto max-w-3xl space-y-6">
             <button
                 type="button"
                 onClick={() => navigate(`/admin/users/${id}`)}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-950"
             >
-                ← Back to user
+                <ArrowLeft className="h-4 w-4" />
+                Back to user
             </button>
 
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight">
-                    Edit user
-                </h1>
+            <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
+                <div className="absolute -right-20 -top-24 h-60 w-60 rounded-full bg-indigo-500/20 blur-3xl" />
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Update the user's profile information.
-                </p>
-            </div>
+                <div className="relative flex items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
+                        <UserRound className="h-6 w-6" />
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-slate-400">
+                            User management
+                        </p>
+                        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+                            Edit user
+                        </h1>
+                        <p className="mt-2 text-sm text-slate-400">
+                            Update the user's profile information.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="space-y-6 rounded-xl border bg-card p-6 shadow-sm"
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
             >
-                <div className="grid gap-6 sm:grid-cols-2">
-                    <div>
-                        <label
-                            htmlFor="firstName"
-                            className="mb-2 block text-sm font-medium"
-                        >
-                            First name
-                        </label>
+                <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+                    <h2 className="text-base font-semibold text-slate-950">
+                        Profile information
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Update the fields that are editable by an administrator.
+                    </p>
+                </div>
 
-                        <input
-                            id="firstName"
+                <div className="space-y-6 p-5 sm:p-6">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        <Input
+                            label="First name"
+                            leftElement={<UserRound className="h-4 w-4" />}
+                            error={errors.firstName?.message}
                             {...register("firstName", {
                                 required: "First name is required",
                                 minLength: {
@@ -130,26 +148,12 @@ export default function AdminUserEditPage() {
                                         "First name must not exceed 50 characters",
                                 },
                             })}
-                            className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                         />
 
-                        {errors.firstName && (
-                            <p className="mt-1 text-sm text-destructive">
-                                {errors.firstName.message}
-                            </p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="lastName"
-                            className="mb-2 block text-sm font-medium"
-                        >
-                            Last name
-                        </label>
-
-                        <input
-                            id="lastName"
+                        <Input
+                            label="Last name"
+                            leftElement={<UserRound className="h-4 w-4" />}
+                            error={errors.lastName?.message}
                             {...register("lastName", {
                                 required: "Last name is required",
                                 minLength: {
@@ -163,27 +167,14 @@ export default function AdminUserEditPage() {
                                         "Last name must not exceed 50 characters",
                                 },
                             })}
-                            className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                         />
-
-                        {errors.lastName && (
-                            <p className="mt-1 text-sm text-destructive">
-                                {errors.lastName.message}
-                            </p>
-                        )}
                     </div>
-                </div>
 
-                <div>
-                    <label
-                        htmlFor="phoneNumber"
-                        className="mb-2 block text-sm font-medium"
-                    >
-                        Phone number
-                    </label>
-
-                    <input
-                        id="phoneNumber"
+                    <Input
+                        label="Phone number"
+                        placeholder="+994501234567"
+                        leftElement={<Phone className="h-4 w-4" />}
+                        error={errors.phoneNumber?.message}
                         {...register("phoneNumber", {
                             required: "Phone number is required",
                             pattern: {
@@ -192,46 +183,42 @@ export default function AdminUserEditPage() {
                                     "Phone number must be in the format +994XXXXXXXXX",
                             },
                         })}
-                        placeholder="+994501234567"
-                        className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                     />
 
-                    {errors.phoneNumber && (
-                        <p className="mt-1 text-sm text-destructive">
-                            {errors.phoneNumber.message}
+                    <div className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+                        <p className="text-sm leading-6 text-slate-500">
+                            Email, FIN, birth date and roles cannot be changed
+                            from this form.
                         </p>
+                    </div>
+
+                    {updateUser.isError && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            Failed to update user. Please try again.
+                        </div>
                     )}
                 </div>
 
-                <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
-                    Email, FIN, birth date and roles cannot be changed from
-                    this form.
-                </div>
-
-                {updateUser.isError && (
-                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                        Failed to update user. Please try again.
-                    </div>
-                )}
-
-                <div className="flex justify-end gap-3">
-                    <button
+                <div className="flex flex-col-reverse gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <Button
                         type="button"
+                        variant="outline"
+                        disabled={updateUser.isPending}
                         onClick={() => navigate(`/admin/users/${id}`)}
-                        className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
                     >
                         Cancel
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         type="submit"
                         disabled={updateUser.isPending}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
+                        <Save className="h-4 w-4" />
                         {updateUser.isPending
                             ? "Saving..."
                             : "Save changes"}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
