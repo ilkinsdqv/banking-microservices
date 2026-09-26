@@ -1,3 +1,8 @@
+import {
+    CheckCircle2,
+    XCircle,
+} from "lucide-react";
+
 import type { AuditStatus } from "../types/audit-log";
 
 interface AuditStatusBadgeProps {
@@ -11,12 +16,20 @@ export function AuditStatusBadge({
 
     return (
         <span
-            className={
+            className={[
+                "inline-flex items-center gap-1.5 rounded-full",
+                "px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
                 isSuccess
-                    ? "inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700"
-                    : "inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700"
-            }
+                    ? "bg-emerald-50 text-emerald-700 ring-emerald-600/10"
+                    : "bg-red-50 text-red-700 ring-red-600/10",
+            ].join(" ")}
         >
+            {isSuccess ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+            ) : (
+                <XCircle className="h-3.5 w-3.5" />
+            )}
+
             {isSuccess ? "Success" : "Failed"}
         </span>
     );
