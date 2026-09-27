@@ -683,6 +683,7 @@ class LoanServiceImplTest {
         LoanResponse result =
                 loanService.makePayment(
                         loanId,
+                        accountId,
                         paymentAmount,
                         "127.0.0.1"
                 );
@@ -746,6 +747,7 @@ class LoanServiceImplTest {
 
         loanService.makePayment(
                 loanId,
+                accountId,
                 paymentAmount,
                 "127.0.0.1"
         );
@@ -815,6 +817,7 @@ class LoanServiceImplTest {
                         IllegalStateException.class,
                         () -> loanService.makePayment(
                                 loanId,
+                                accountId,
                                 new BigDecimal("1000.00"),
                                 "127.0.0.1"
                         )
@@ -866,6 +869,7 @@ class LoanServiceImplTest {
                         IllegalArgumentException.class,
                         () -> loanService.makePayment(
                                 loanId,
+                                accountId,
                                 new BigDecimal("15000.00"),
                                 "127.0.0.1"
                         )
@@ -895,6 +899,7 @@ class LoanServiceImplTest {
         LoanPayment payment1 =
                 new LoanPayment(
                         loanId,
+                        accountId,
                         new BigDecimal("1000.00"),
                         new BigDecimal("9000.00"),
                         LoanPaymentStatus.COMPLETED
@@ -903,6 +908,7 @@ class LoanServiceImplTest {
         LoanPayment payment2 =
                 new LoanPayment(
                         loanId,
+                        accountId,
                         new BigDecimal("2000.00"),
                         new BigDecimal("7000.00"),
                         LoanPaymentStatus.COMPLETED

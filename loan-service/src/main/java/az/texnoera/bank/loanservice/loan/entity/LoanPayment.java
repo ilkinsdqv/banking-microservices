@@ -22,6 +22,9 @@ public class LoanPayment extends BaseEntity {
     @Column(nullable = false)
     private UUID loanId;
 
+    @Column(nullable = false)
+    private UUID paymentAccountId;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
@@ -34,11 +37,13 @@ public class LoanPayment extends BaseEntity {
 
     public LoanPayment(
             UUID loanId,
+            UUID paymentAccountId,
             BigDecimal amount,
             BigDecimal remainingAmount,
             LoanPaymentStatus status
     ) {
         this.loanId = loanId;
+        this.paymentAccountId = paymentAccountId;
         this.amount = amount;
         this.remainingAmount = remainingAmount;
         this.status = status;

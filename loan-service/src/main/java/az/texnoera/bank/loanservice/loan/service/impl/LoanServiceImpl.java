@@ -261,6 +261,7 @@ public class LoanServiceImpl implements LoanService {
     @Transactional
     public LoanResponse makePayment(
             UUID id,
+            UUID paymentAccountId,
             BigDecimal amount,
             String ipAddress
     ) {
@@ -271,7 +272,7 @@ public class LoanServiceImpl implements LoanService {
                 transactionServiceClient.createLoanPayment(
                         new CreateLoanPaymentRequest(
                                 loan.getUserId(),
-                                loan.getAccountId(),
+                                paymentAccountId,
                                 amount,
                                 loan.getCurrency(),
                                 "Loan payment: " + loan.getId()
@@ -288,6 +289,7 @@ public class LoanServiceImpl implements LoanService {
 
         LoanPayment payment = new LoanPayment(
                 loan.getId(),
+                paymentAccountId,
                 amount,
                 loan.getRemainingAmount(),
                 LoanPaymentStatus.COMPLETED

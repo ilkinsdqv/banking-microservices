@@ -8,13 +8,15 @@ export function useMakeLoanPayment() {
   return useMutation({
     mutationFn: ({
       loanId,
+      paymentAccountId,
       amount,
     }: {
       loanId: string;
+      paymentAccountId: string;
       amount: number;
-    }) => loansApi.makePayment(loanId, amount),
+    }) => loansApi.makePayment(loanId, paymentAccountId, amount),
 
-    onSuccess: (loan) => {
+    onSuccess: (loan, variables) => {
       queryClient.setQueryData(["loans", loan.id], loan);
 
       queryClient.invalidateQueries({
@@ -26,7 +28,7 @@ export function useMakeLoanPayment() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["accounts", loan.accountId],
+        queryKey: ["accounts"],
       });
     },
   });

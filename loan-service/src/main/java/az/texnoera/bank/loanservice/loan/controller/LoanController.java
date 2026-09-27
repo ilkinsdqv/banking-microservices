@@ -154,6 +154,7 @@ public class LoanController {
     )
     public ResponseEntity<LoanResponse> makePayment(
             @PathVariable UUID id,
+            @RequestParam UUID paymentAccountId,
             @RequestParam BigDecimal amount,
             HttpServletRequest httpRequest
     ) {
@@ -161,6 +162,7 @@ public class LoanController {
         return ResponseEntity.ok(
                 loanService.makePayment(
                         id,
+                        paymentAccountId,
                         amount,
                         getClientIpAddress(httpRequest)
                 )

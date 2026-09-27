@@ -357,6 +357,7 @@ class LoanControllerTest {
 
         when(loanService.makePayment(
                 loanId,
+                accountId,
                 amount,
                 "127.0.0.1"
         )).thenReturn(loanResponse);
@@ -364,6 +365,7 @@ class LoanControllerTest {
         ResponseEntity<LoanResponse> response =
                 controller.makePayment(
                         loanId,
+                        accountId,
                         amount,
                         httpRequest
                 );
@@ -380,6 +382,7 @@ class LoanControllerTest {
 
         verify(loanService).makePayment(
                 loanId,
+                accountId,
                 amount,
                 "127.0.0.1"
         );

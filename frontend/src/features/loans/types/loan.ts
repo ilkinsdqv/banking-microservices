@@ -37,6 +37,7 @@ export interface CreateLoanRequest {
 export interface LoanPayment {
     id: string;
     loanId: string;
+    paymentAccountId: string;
     amount: number;
     remainingAmount: number;
     status: LoanPaymentStatus;

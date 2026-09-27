@@ -32,6 +32,7 @@ public interface LoanService {
 
     LoanResponse makePayment(
             UUID id,
+            UUID paymentAccountId,
             BigDecimal amount,
             String ipAddress
     );

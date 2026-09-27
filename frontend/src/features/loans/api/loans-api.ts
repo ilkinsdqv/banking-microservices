@@ -42,6 +42,7 @@ export const loansApi = {
 
     makePayment: async (
         loanId: string,
+        paymentAccountId: string,
         amount: number,
     ): Promise<Loan> => {
         const response = await apiClient.post<Loan>(
@@ -49,6 +50,7 @@ export const loansApi = {
             null,
             {
                 params: {
+                    paymentAccountId,
                     amount,
                 },
             },
