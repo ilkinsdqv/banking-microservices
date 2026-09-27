@@ -43,6 +43,14 @@ public class AccountController {
                 );
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AccountResponse>> getAllAccounts() {
+        return ResponseEntity.ok(
+                accountService.getAllAccounts()
+        );
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @accountSecurityService.isOwner(authentication, #id)")
     public ResponseEntity<AccountResponse> getAccountById(

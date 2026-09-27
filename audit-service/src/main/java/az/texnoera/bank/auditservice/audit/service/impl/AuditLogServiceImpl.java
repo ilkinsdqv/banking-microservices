@@ -7,12 +7,16 @@ import az.texnoera.bank.auditservice.audit.exception.AuditLogNotFoundException;
 import az.texnoera.bank.auditservice.audit.mapper.AuditLogMapper;
 import az.texnoera.bank.auditservice.audit.repository.AuditLogRepository;
 import az.texnoera.bank.auditservice.audit.service.AuditLogService;
+import az.texnoera.bank.auditservice.audit.specification.AuditLogSpecification;
 import az.texnoera.bank.common.audit.AuditAction;
+import az.texnoera.bank.common.audit.AuditStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,7 +29,9 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     @Transactional
-    public AuditLogResponse createAuditLog(CreateAuditLogRequest request) {
+    public AuditLogResponse createAuditLog(
+            CreateAuditLogRequest request
+    ) {
 
         AuditLog auditLog = auditLogMapper.toEntity(request);
 
@@ -35,7 +41,9 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public AuditLogResponse getAuditLogById(UUID id) {
+    public AuditLogResponse getAuditLogById(
+            UUID id
+    ) {
 
         return auditLogMapper.toResponse(
                 getEntity(id)
@@ -43,44 +51,34 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public List<AuditLogResponse> getAllAuditLogs() {
+    public Page<AuditLogResponse> getAuditLogs(
+            UUID userId,
+            AuditAction action,
+            String serviceName,
+            AuditStatus status,
+            Pageable pageable
+    ) {
 
-        return auditLogRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(auditLogMapper::toResponse)
-                .toList();
+        Specification<AuditLog> specification =
+                Specification.allOf(
+                        AuditLogSpecification.hasUserId(userId),
+                        AuditLogSpecification.hasAction(action),
+                        AuditLogSpecification.hasServiceName(serviceName),
+                        AuditLogSpecification.hasStatus(status)
+                );
+
+        return auditLogRepository
+                .findAll(specification, pageable)
+                .map(auditLogMapper::toResponse);
     }
 
-    @Override
-    public List<AuditLogResponse> getAuditLogsByUserId(UUID userId) {
-
-        return auditLogRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(auditLogMapper::toResponse)
-                .toList();
-    }
-
-    @Override
-    public List<AuditLogResponse> getAuditLogsByAction(AuditAction action) {
-
-        return auditLogRepository.findAllByActionOrderByCreatedAtDesc(action)
-                .stream()
-                .map(auditLogMapper::toResponse)
-                .toList();
-    }
-
-    @Override
-    public List<AuditLogResponse> getAuditLogsByServiceName(String serviceName) {
-
-        return auditLogRepository.findAllByServiceNameOrderByCreatedAtDesc(serviceName)
-                .stream()
-                .map(auditLogMapper::toResponse)
-                .toList();
-    }
-
-    private AuditLog getEntity(UUID id) {
+    private AuditLog getEntity(
+            UUID id
+    ) {
 
         return auditLogRepository.findById(id)
-                .orElseThrow(() -> new AuditLogNotFoundException(id));
+                .orElseThrow(
+                        () -> new AuditLogNotFoundException(id)
+                );
     }
 }

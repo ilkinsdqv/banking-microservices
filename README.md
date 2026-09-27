@@ -125,6 +125,20 @@ The system follows a microservice architecture where each business domain is imp
 - Lombok
 - Flyway
 
+### Frontend
+
+- React 19.3
+- TypeScript
+- Vite 8.3.0
+- React Router
+- TanStack Query
+- Axios
+- React Hook Form
+- Zod
+- Tailwind CSS 4
+- shadcn/ui
+- Lucide React
+
 ### Infrastructure
 
 - PostgreSQL 17
@@ -452,6 +466,194 @@ Web UI: http://localhost:8025
 
 ---
 
+## Frontend Architecture
+
+The project includes a React-based frontend application that communicates with the backend exclusively through the API Gateway.
+
+```text
+Browser
+   │
+   ▼
+React Frontend
+   │
+   ▼
+API Gateway :8080
+   │
+   ├── User Service
+   ├── Auth Service
+   ├── Account Service
+   ├── Transaction Service
+   ├── Loan Service
+   ├── Complaint Service
+   └── Audit Service
+```
+
+The frontend does not connect directly to individual microservice ports or databases.
+
+### Frontend Structure
+
+```text
+frontend/
+├── public/
+├── src/
+│   ├── app/
+│   │   ├── App.tsx
+│   │   └── providers/
+│   ├── components/
+│   │   ├── ui/
+│   │   └── shared/
+│   ├── features/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── accounts/
+│   │   ├── transactions/
+│   │   ├── loans/
+│   │   ├── complaints/
+│   │   └── audit/
+│   ├── layouts/
+│   ├── routes/
+│   ├── lib/
+│   ├── types/
+│   ├── utils/
+│   ├── config/
+│   ├── main.tsx
+│   └── index.css
+├── .env
+├── .env.example
+├── package.json
+└── vite.config.ts
+```
+
+### Frontend State and Data Management
+
+Server-side data is managed with TanStack Query.
+
+The frontend uses:
+
+- Query-based data fetching
+- Mutation handling
+- Loading and error states
+- Cache management
+- Automatic refetching where appropriate
+
+Axios is used as the HTTP client and communicates with the API Gateway.
+
+Authentication state is handled through the frontend authentication layer, with access-token handling and refresh-token support.
+
+### Frontend Authentication
+
+The frontend authentication flow is:
+
+```text
+Login Page
+    │
+    ▼
+Auth Service
+    │
+    ▼
+Access Token + Refresh Token
+    │
+    ▼
+Authenticated Application
+```
+
+Authenticated API requests use:
+
+```http
+Authorization: Bearer <JWT>
+```
+
+When an access token expires, the frontend uses the refresh-token flow and retries the failed request when possible.
+
+The frontend does not expose or use the backend internal service authentication key.
+
+### Frontend Features
+
+Customer-facing functionality includes:
+
+- User registration
+- Login
+- Email verification flow UI
+- Dashboard
+- Account listing and details
+- Account creation
+- Cash-in
+- Transaction history
+- Transaction details
+- Money transfer
+- Loan listing
+- Loan details
+- Loan application
+- Loan payments
+- Complaint creation
+- Complaint listing and details
+
+Administrative functionality includes:
+
+- User management
+- User details and editing
+- User status actions
+- Account administration
+- Complaint administration
+- Audit log administration
+- Audit log details
+
+### Frontend Routes
+
+Customer routes:
+
+```text
+/login
+/register
+/verify-email
+/dashboard
+/accounts
+/accounts/:id
+/transactions
+/transactions/:id
+/transfer
+/loans
+/loans/new
+/loans/:id
+/complaints
+/complaints/new
+/complaints/:id
+```
+
+Administrative routes:
+
+```text
+/admin/users
+/admin/users/:id
+/admin/users/:id/edit
+/admin/accounts
+/admin/complaints
+/admin/audit
+/admin/audit/:id
+```
+
+### Frontend UI
+
+The frontend provides:
+
+- Responsive desktop, tablet, and mobile layouts
+- Customer and administrator navigation
+- Reusable UI components
+- Loading skeletons
+- Empty states
+- Error states
+- Pagination
+- Form validation
+- Confirmation dialogs
+- Toast notifications
+- Status and priority badges
+- Responsive data lists and tables
+- Accessible focus states and interactive controls
+
+The frontend is designed as a presentation and API-consumption layer; business rules remain implemented in the backend services.
+
+---
+
 ## Project Structure
 
 ```text
@@ -494,6 +696,8 @@ Install:
 - JDK 21
 - Maven
 - Docker Desktop
+- Node.js 22+
+- npm
 
 Verify:
 
@@ -502,6 +706,51 @@ java -version
 mvn -version
 docker --version
 docker compose version
+node -version
+npm -version
+```
+
+---
+
+### Frontend Setup
+
+The frontend is located in the `frontend/` directory.
+
+Install dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+Create `.env` from `.env.example` and configure the API Gateway URL:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The frontend is available at:
+
+```text
+http://localhost:5173
+```
+
+The frontend communicates with the backend through:
+
+```text
+http://localhost:8080
+```
+
+Build the frontend for production:
+
+```bash
+npm run build
 ```
 
 ---
@@ -748,6 +997,21 @@ The following major components have been implemented:
 - [x] Automated service tests
 - [x] Full Maven test suite
 - [x] End-to-end business flow verification
+- [x] React frontend
+- [x] Customer dashboard
+- [x] Customer account management UI
+- [x] Transaction and money transfer UI
+- [x] Loan management UI
+- [x] Complaint management UI
+- [x] Administrative user management UI
+- [x] Administrative account management UI
+- [x] Administrative complaint management UI
+- [x] Audit log UI
+- [x] Protected customer and admin routes
+- [x] JWT access-token handling
+- [x] Refresh-token flow integration
+- [x] Responsive frontend layout
+- [x] Production frontend build
 
 ---
 
