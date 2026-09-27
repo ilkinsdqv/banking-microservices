@@ -3,10 +3,10 @@ package az.texnoera.bank.loanservice.loan.service.impl;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.loanservice.audit.AuditEventPublisher;
-import az.texnoera.bank.loanservice.client.AccountClient;
 import az.texnoera.bank.loanservice.client.AccountServiceClient;
-import az.texnoera.bank.loanservice.client.TransactionClient;
 import az.texnoera.bank.loanservice.client.TransactionServiceClient;
+import az.texnoera.bank.loanservice.client.UserClient;
+import az.texnoera.bank.loanservice.client.dto.LoanUserLookupResponse;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanDisbursementRequest;
 import az.texnoera.bank.loanservice.client.dto.CreateLoanPaymentRequest;
@@ -14,6 +14,7 @@ import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
+import az.texnoera.bank.loanservice.loan.dto.response.CustomerLoanResponse;
 import az.texnoera.bank.loanservice.loan.entity.Loan;
 import az.texnoera.bank.loanservice.loan.entity.LoanPayment;
 import az.texnoera.bank.loanservice.loan.entity.LoanPaymentStatus;
@@ -42,6 +43,7 @@ public class LoanServiceImpl implements LoanService {
     private final LoanPaymentRepository loanPaymentRepository;
     private final LoanPaymentMapper loanPaymentMapper;
     private final TransactionServiceClient transactionServiceClient;
+    private final UserClient userClient;
     private final AccountServiceClient accountServiceClient;
     private final AuditEventPublisher auditEventPublisher;
 
@@ -250,6 +252,92 @@ public class LoanServiceImpl implements LoanService {
                 "LOAN",
                 loan.getId(),
                 "Loan cancelled: " + loan.getId(),
+                AuditStatus.SUCCESS,
+                ipAddress
+        );
+
+        return loanMapper.toResponse(loan);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CustomerLoanResponse findCustomerLoans(
+            String fin,
+            java.time.LocalDate birthDate
+    ) {
+        LoanUserLookupResponse customer =
+                userClient.findByFinAndBirthDate(fin, birthDate);
+
+        List<LoanResponse> loans =
+                loanRepository.findAllByUserIdAndStatus(
+                                customer.id(),
+                                LoanStatus.ACTIVE
+                        )
+                        .stream()
+                        .map(loanMapper::toResponse)
+                        .toList();
+
+        return new CustomerLoanResponse(
+                customer.id(),
+                customer.firstName(),
+                customer.lastName(),
+                customer.fin(),
+                customer.birthDate(),
+                loans
+        );
+    }
+
+    @Override
+    @Transactional
+    public LoanResponse makeThirdPartyPayment(
+            UUID id,
+            UUID payerUserId,
+            UUID paymentAccountId,
+            BigDecimal amount,
+            String ipAddress
+    ) {
+        Loan loan = getEntity(id);
+
+        AccountResponse account =
+                accountServiceClient.getAccountById(paymentAccountId);
+        validateAccountOwner(account, payerUserId);
+        validateCurrency(account, loan.getCurrency().name());
+
+        TransactionResponse transaction =
+                transactionServiceClient.createLoanPayment(
+                        new CreateLoanPaymentRequest(
+                                payerUserId,
+                                paymentAccountId,
+                                amount,
+                                loan.getCurrency(),
+                                "Third-party loan payment: " + loan.getId()
+                        )
+                );
+
+        if (!"COMPLETED".equals(transaction.status())) {
+            throw new IllegalStateException(
+                    "Loan payment transaction failed"
+            );
+        }
+
+        loan.makePayment(amount);
+
+        LoanPayment payment = new LoanPayment(
+                loan.getId(),
+                paymentAccountId,
+                amount,
+                loan.getRemainingAmount(),
+                LoanPaymentStatus.COMPLETED
+        );
+
+        loanPaymentRepository.save(payment);
+
+        auditEventPublisher.publish(
+                payerUserId,
+                AuditAction.LOAN_PAYMENT,
+                "LOAN",
+                loan.getId(),
+                "Third-party loan payment: " + amount,
                 AuditStatus.SUCCESS,
                 ipAddress
         );

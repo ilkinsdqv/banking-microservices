@@ -16,7 +16,7 @@ export function useMakeLoanPayment() {
       amount: number;
     }) => loansApi.makePayment(loanId, paymentAccountId, amount),
 
-    onSuccess: (loan, variables) => {
+    onSuccess: (loan) => {
       queryClient.setQueryData(["loans", loan.id], loan);
 
       queryClient.invalidateQueries({

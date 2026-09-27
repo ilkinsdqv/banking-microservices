@@ -3,6 +3,8 @@ package az.texnoera.bank.loanservice.loan.service.impl;
 import az.texnoera.bank.loanservice.audit.AuditEventPublisher;
 import az.texnoera.bank.loanservice.client.AccountServiceClient;
 import az.texnoera.bank.loanservice.client.TransactionServiceClient;
+import az.texnoera.bank.loanservice.client.UserClient;
+import az.texnoera.bank.loanservice.client.dto.LoanUserLookupResponse;
 import az.texnoera.bank.loanservice.client.dto.AccountResponse;
 import az.texnoera.bank.loanservice.client.dto.TransactionResponse;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -58,6 +61,9 @@ class LoanServiceImplTest {
     private AccountServiceClient accountServiceClient;
 
     @Mock
+    private UserClient userClient;
+
+    @Mock
     private AuditEventPublisher auditEventPublisher;
 
     private LoanServiceImpl loanService;
@@ -78,6 +84,7 @@ class LoanServiceImplTest {
                 loanPaymentRepository,
                 loanPaymentMapper,
                 transactionServiceClient,
+                userClient,
                 accountServiceClient,
                 auditEventPublisher
         );
@@ -892,6 +899,195 @@ class LoanServiceImplTest {
     }
 
     @Test
+    void findCustomerLoans_success() {
+
+        String fin = "AA1234567";
+        java.time.LocalDate birthDate =
+                java.time.LocalDate.of(1998, 5, 10);
+
+        UUID customerId = UUID.randomUUID();
+
+        Loan customerLoan1 = createLoan(LoanStatus.ACTIVE);
+        Loan customerLoan2 = createLoan(LoanStatus.APPROVED);
+
+        LoanUserLookupResponse customer =
+                new LoanUserLookupResponse(
+                        customerId,
+                        "John",
+                        "Doe",
+                        fin,
+                        birthDate
+                );
+
+        LoanResponse response1 = mock(LoanResponse.class);
+
+        when(userClient.findByFinAndBirthDate(fin, birthDate))
+                .thenReturn(customer);
+
+        when(loanRepository.findAllByUserIdAndStatus(
+                customerId,
+                LoanStatus.ACTIVE
+        )).thenReturn(List.of(customerLoan1));
+
+        when(loanMapper.toResponse(customerLoan1))
+                .thenReturn(response1);
+
+        var result =
+                loanService.findCustomerLoans(fin, birthDate);
+
+        assertEquals(customerId, result.userId());
+        assertEquals("John", result.firstName());
+        assertEquals("Doe", result.lastName());
+        assertEquals(fin, result.fin());
+        assertEquals(birthDate, result.birthDate());
+        assertEquals(List.of(response1), result.loans());
+
+        verify(userClient).findByFinAndBirthDate(fin, birthDate);
+
+        verify(loanRepository).findAllByUserIdAndStatus(
+                customerId,
+                LoanStatus.ACTIVE
+        );
+    }
+
+    @Test
+    void makeThirdPartyPayment_success() {
+
+        Loan loan = createLoan(LoanStatus.ACTIVE);
+        LoanResponse response = mock(LoanResponse.class);
+
+        UUID payerUserId = UUID.randomUUID();
+        UUID paymentAccountId = UUID.randomUUID();
+
+        AccountResponse payerAccount =
+                new AccountResponse(
+                        paymentAccountId,
+                        payerUserId,
+                        "AZ00BANK11111111111111111111",
+                        new BigDecimal("5000.00"),
+                        Currency.AZN.name(),
+                        "CURRENT",
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                );
+
+        BigDecimal paymentAmount =
+                new BigDecimal("1000.00");
+
+        TransactionResponse transaction =
+                new TransactionResponse(
+                        UUID.randomUUID(),
+                        paymentAccountId,
+                        null,
+                        paymentAmount,
+                        Currency.AZN.name(),
+                        "LOAN_PAYMENT",
+                        "COMPLETED",
+                        "Third-party loan payment",
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                );
+
+        when(loanRepository.findById(loanId))
+                .thenReturn(Optional.of(loan));
+
+        when(accountServiceClient.getAccountById(paymentAccountId))
+                .thenReturn(payerAccount);
+
+        when(transactionServiceClient.createLoanPayment(any()))
+                .thenReturn(transaction);
+
+        when(loanMapper.toResponse(loan))
+                .thenReturn(response);
+
+        LoanResponse result =
+                loanService.makeThirdPartyPayment(
+                        loanId,
+                        payerUserId,
+                        paymentAccountId,
+                        paymentAmount,
+                        "127.0.0.1"
+                );
+
+        assertSame(response, result);
+        assertEquals(
+                new BigDecimal("9000.00"),
+                loan.getRemainingAmount()
+        );
+
+        verify(transactionServiceClient)
+                .createLoanPayment(any());
+
+        verify(loanPaymentRepository)
+                .save(any(LoanPayment.class));
+
+        verify(auditEventPublisher).publish(
+                eq(payerUserId),
+                any(),
+                eq("LOAN"),
+                eq(loanId),
+                contains("Third-party loan payment"),
+                any(),
+                eq("127.0.0.1")
+        );
+    }
+
+    @Test
+    void makeThirdPartyPayment_accountDoesNotBelongToPayer() {
+
+        Loan loan = createLoan(LoanStatus.ACTIVE);
+
+        UUID payerUserId = UUID.randomUUID();
+        UUID differentUserId = UUID.randomUUID();
+        UUID paymentAccountId = UUID.randomUUID();
+
+        AccountResponse foreignAccount =
+                new AccountResponse(
+                        paymentAccountId,
+                        differentUserId,
+                        "AZ00BANK11111111111111111111",
+                        new BigDecimal("5000.00"),
+                        Currency.AZN.name(),
+                        "CURRENT",
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                );
+
+        when(loanRepository.findById(loanId))
+                .thenReturn(Optional.of(loan));
+
+        when(accountServiceClient.getAccountById(paymentAccountId))
+                .thenReturn(foreignAccount);
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> loanService.makeThirdPartyPayment(
+                                loanId,
+                                payerUserId,
+                                paymentAccountId,
+                                new BigDecimal("1000.00"),
+                                "127.0.0.1"
+                        )
+                );
+
+        assertEquals(
+                "Account does not belong to current user",
+                exception.getMessage()
+        );
+
+        verify(
+                transactionServiceClient,
+                never()
+        ).createLoanPayment(any());
+
+        verify(
+                loanPaymentRepository,
+                never()
+        ).save(any());
+    }
+
+    @Test
     void getPaymentHistory_success() {
 
         Loan loan = createLoan(LoanStatus.ACTIVE);
@@ -965,7 +1161,7 @@ class LoanServiceImplTest {
 
     private Loan createLoan(LoanStatus status) {
 
-        return new Loan(
+        Loan loan = new Loan(
                 userId,
                 accountId,
                 new BigDecimal("10000.00"),
@@ -976,5 +1172,13 @@ class LoanServiceImplTest {
                 Currency.AZN,
                 status
         );
+
+        ReflectionTestUtils.setField(
+                loan,
+                "id",
+                loanId
+        );
+
+        return loan;
     }
 }
