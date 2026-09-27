@@ -22,8 +22,11 @@ public class Account extends BaseEntity {
     @Column(nullable = false)
     private UUID userId;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 28)
     private String iban;
+
+    @Column(nullable = false, unique = true, length = 16)
+    private String accountNumber;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal balance;
@@ -39,12 +42,14 @@ public class Account extends BaseEntity {
     public Account(
             UUID userId,
             String iban,
+            String accountNumber,
             BigDecimal balance,
             Currency currency,
             AccountType type
     ) {
         this.userId = userId;
         this.iban = iban;
+        this.accountNumber = accountNumber;
         this.balance = balance;
         this.currency = currency;
         this.type = type;

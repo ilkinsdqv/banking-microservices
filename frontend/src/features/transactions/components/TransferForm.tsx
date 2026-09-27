@@ -42,22 +42,29 @@ function TransferForm({
     const {
         register,
         handleSubmit,
+        watch,
         formState: { errors },
     } = useForm<TransferFormValues>({
         resolver: zodResolver(transferSchema),
         defaultValues: {
             fromAccountId: "",
+            destinationType: "OWN_ACCOUNT",
             toAccountId: "",
+            toAccountNumber: "",
             amount: undefined,
             currency: "AZN",
             description: "",
         },
     });
 
+    const destinationType = watch("destinationType");
+
     const onSubmit = async (values: TransferFormValues) => {
         await createTransaction.mutateAsync({
             fromAccountId: values.fromAccountId,
-            toAccountId: values.toAccountId,
+            ...(values.destinationType === "OWN_ACCOUNT"
+                ? { toAccountId: values.toAccountId }
+                : { toAccountNumber: values.toAccountNumber }),
             amount: values.amount,
             currency: values.currency,
             type: "TRANSFER",
@@ -158,7 +165,7 @@ function TransferForm({
                             Transfer accounts
                         </p>
                         <p className="text-xs text-slate-500">
-                            Select the source and destination accounts.
+                            Transfer between your own accounts or send to another account.
                         </p>
                     </div>
                 </div>
@@ -188,7 +195,7 @@ function TransferForm({
                                         key={account.id}
                                         value={account.id}
                                     >
-                                        {account.iban} —{" "}
+                                        {account.accountNumber} —{" "}
                                         {account.balance.toFixed(2)}{" "}
                                         {account.currency}
                                     </option>
@@ -208,39 +215,86 @@ function TransferForm({
                     </div>
 
                     <div>
-                        <label
-                            htmlFor="toAccountId"
-                            className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                        >
-                            To account
-                        </label>
+                        <div className="mb-2 flex items-center gap-4">
+                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Destination
+                            </label>
 
-                        <div className="relative">
-                            <CreditCard className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+                                <input
+                                    type="radio"
+                                    value="OWN_ACCOUNT"
+                                    disabled={createTransaction.isPending}
+                                    {...register("destinationType")}
+                                />
+                                My account
+                            </label>
 
-                            <select
-                                id="toAccountId"
-                                disabled={createTransaction.isPending}
-                                {...register("toAccountId")}
-                                className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-medium text-slate-800 outline-none transition hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-100"
-                            >
-                                <option value="">Select account</option>
-
-                                {accounts.map((account) => (
-                                    <option
-                                        key={account.id}
-                                        value={account.id}
-                                    >
-                                        {account.iban} — {account.currency}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+                                <input
+                                    type="radio"
+                                    value="OTHER_ACCOUNT"
+                                    disabled={createTransaction.isPending}
+                                    {...register("destinationType")}
+                                />
+                                Other account
+                            </label>
                         </div>
 
-                        {errors.toAccountId && (
-                            <p className="mt-1.5 text-xs font-medium text-red-600">
-                                {errors.toAccountId.message}
-                            </p>
+                        {destinationType === "OWN_ACCOUNT" ? (
+                            <>
+                                <div className="relative">
+                                    <WalletCards className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <select
+                                        id="toAccountId"
+                                        disabled={createTransaction.isPending}
+                                        {...register("toAccountId")}
+                                        className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-medium text-slate-800 outline-none transition hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                    >
+                                        <option value="">Select account</option>
+
+                                        {accounts.map((account) => (
+                                            <option
+                                                key={account.id}
+                                                value={account.id}
+                                            >
+                                                {account.accountNumber} — {account.currency}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {errors.toAccountId && (
+                                    <p className="mt-1.5 text-xs font-medium text-red-600">
+                                        {errors.toAccountId.message}
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="relative">
+                                    <CreditCard className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        id="toAccountNumber"
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="off"
+                                        maxLength={16}
+                                        placeholder="16-digit account number"
+                                        disabled={createTransaction.isPending}
+                                        {...register("toAccountNumber")}
+                                        className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 font-mono text-sm font-medium tracking-wider text-slate-800 outline-none transition placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                    />
+                                </div>
+
+                                {errors.toAccountNumber && (
+                                    <p className="mt-1.5 text-xs font-medium text-red-600">
+                                        {errors.toAccountNumber.message}
+                                    </p>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

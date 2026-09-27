@@ -70,6 +70,7 @@ class TransactionServiceImplTest {
         CreateTransactionRequest request = new CreateTransactionRequest(
                 null,
                 accountId,
+                null,
                 new BigDecimal("25.00"),
                 Currency.AZN,
                 TransactionType.DEPOSIT,
@@ -110,6 +111,7 @@ class TransactionServiceImplTest {
         UUID accountId = UUID.randomUUID();
         CreateTransactionRequest request = new CreateTransactionRequest(
                 accountId,
+                null,
                 null,
                 new BigDecimal("10.00"),
                 Currency.AZN,
@@ -204,6 +206,41 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    void shouldCompleteTransferUsingDestinationAccountNumber() {
+        UUID userId = UUID.randomUUID();
+        UUID sourceId = UUID.randomUUID();
+        UUID destinationId = UUID.randomUUID();
+        String destinationAccountNumber = "4532015112830366";
+
+        CreateTransactionRequest request = new CreateTransactionRequest(
+                sourceId,
+                null,
+                destinationAccountNumber,
+                new BigDecimal("30.00"),
+                Currency.AZN,
+                TransactionType.TRANSFER,
+                "rent"
+        );
+
+        when(accountServiceClient.getAccountById(sourceId))
+                .thenReturn(account(sourceId, userId, "AZN"));
+        when(accountServiceClient.getAccountByAccountNumber(destinationAccountNumber))
+                .thenReturn(account(destinationId, UUID.randomUUID(), "AZN"));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(transactionMapper.toResponse(any(Transaction.class)))
+                .thenAnswer(invocation -> toResponse(invocation.getArgument(0)));
+
+        TransactionResponse response =
+                service.createTransaction(userId, request, "10.0.0.5");
+
+        assertThat(response.status()).isEqualTo(TransactionStatus.COMPLETED);
+        assertThat(response.toAccountId()).isEqualTo(destinationId);
+        verify(accountServiceClient).getAccountByAccountNumber(destinationAccountNumber);
+        verify(accountServiceClient, never()).getAccountById(destinationId);
+    }
+
+    @Test
     void shouldRejectTransferWhenSourceAndDestinationAreSame() {
         UUID userId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
@@ -229,6 +266,7 @@ class TransactionServiceImplTest {
                 new CreateTransactionRequest(
                         accountId,
                         null,
+                        null,
                         BigDecimal.ONE,
                         Currency.AZN,
                         TransactionType.WITHDRAW,
@@ -251,6 +289,7 @@ class TransactionServiceImplTest {
                 new CreateTransactionRequest(
                         accountId,
                         null,
+                        null,
                         BigDecimal.ONE,
                         Currency.AZN,
                         TransactionType.WITHDRAW,
@@ -268,6 +307,7 @@ class TransactionServiceImplTest {
                 new CreateTransactionRequest(
                         UUID.randomUUID(),
                         UUID.randomUUID(),
+                        null,
                         BigDecimal.ONE,
                         Currency.AZN,
                         TransactionType.DEPOSIT,
@@ -285,6 +325,7 @@ class TransactionServiceImplTest {
                 new CreateTransactionRequest(
                         null,
                         UUID.randomUUID(),
+                        null,
                         BigDecimal.ONE,
                         Currency.AZN,
                         TransactionType.LOAN_DISBURSEMENT,
@@ -377,6 +418,7 @@ class TransactionServiceImplTest {
                 new CreateTransactionRequest(
                         accountId,
                         null,
+                        null,
                         BigDecimal.TEN,
                         Currency.AZN,
                         TransactionType.WITHDRAW,
@@ -397,6 +439,7 @@ class TransactionServiceImplTest {
         return new CreateTransactionRequest(
                 sourceId,
                 destinationId,
+                null,
                 new BigDecimal("30.00"),
                 Currency.AZN,
                 TransactionType.TRANSFER,

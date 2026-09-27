@@ -71,6 +71,7 @@ class AccountSecurityServiceTest {
         return new Account(
                 userId,
                 "AZ10NABZ12345678901234567890",
+                "4532015112830366",
                 BigDecimal.ZERO,
                 Currency.AZN,
                 AccountType.CHECKING

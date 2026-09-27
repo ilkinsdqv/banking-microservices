@@ -26,7 +26,7 @@ export interface Transaction {
 
 export interface CreateTransactionRequest {
     fromAccountId?: string;
-    toAccountId?: string;
+    toAccountNumber?: string;
     amount: number;
     currency: Currency;
     type: TransactionType;

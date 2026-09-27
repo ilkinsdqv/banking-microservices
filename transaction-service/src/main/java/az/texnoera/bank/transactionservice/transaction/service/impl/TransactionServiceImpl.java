@@ -3,7 +3,6 @@ package az.texnoera.bank.transactionservice.transaction.service.impl;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.transactionservice.audit.AuditEventPublisher;
-import az.texnoera.bank.transactionservice.client.AccountClient;
 import az.texnoera.bank.transactionservice.client.AccountServiceClient;
 import az.texnoera.bank.transactionservice.client.dto.AccountResponse;
 import az.texnoera.bank.transactionservice.transaction.dto.request.BalanceOperationRequest;
@@ -280,9 +279,7 @@ public class TransactionServiceImpl
                 );
 
         AccountResponse destinationAccount =
-                accountServiceClient.getAccountById(
-                        request.toAccountId()
-                );
+                resolveDestinationAccount(request);
 
         validateAccountOwner(sourceAccount, userId);
 
@@ -413,11 +410,19 @@ public class TransactionServiceImpl
         }
 
         case TRANSFER -> {
+            boolean hasDestinationAccountId =
+                    request.toAccountId() != null;
+
+            boolean hasDestinationAccountNumber =
+                    request.toAccountNumber() != null &&
+                            !request.toAccountNumber().isBlank();
+
             if (request.fromAccountId() == null ||
-                    request.toAccountId() == null) {
+                    (!hasDestinationAccountId && !hasDestinationAccountNumber) ||
+                    (hasDestinationAccountId && hasDestinationAccountNumber)) {
 
                 throw new IllegalArgumentException(
-                        "TRANSFER requires both account IDs"
+                        "TRANSFER requires fromAccountId and exactly one destination identifier"
                 );
             }
         }
@@ -427,6 +432,23 @@ public class TransactionServiceImpl
                         "Loan disbursement must use internal endpoint"
                 );
         }
+    }
+
+    private AccountResponse resolveDestinationAccount(
+            CreateTransactionRequest request
+    ) {
+
+        if (request.toAccountNumber() != null &&
+                !request.toAccountNumber().isBlank()) {
+
+            return accountServiceClient.getAccountByAccountNumber(
+                    request.toAccountNumber()
+            );
+        }
+
+        return accountServiceClient.getAccountById(
+                request.toAccountId()
+        );
     }
 
     private void validateAccountOwner(

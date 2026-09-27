@@ -17,6 +17,8 @@ public interface AccountService {
 
     AccountResponse getAccountById(UUID id);
 
+    AccountResponse getAccountByAccountNumber(String accountNumber);
+
     List<AccountResponse> getAllAccounts();
 
     List<AccountResponse> getAccountsByUserId(UUID userId);

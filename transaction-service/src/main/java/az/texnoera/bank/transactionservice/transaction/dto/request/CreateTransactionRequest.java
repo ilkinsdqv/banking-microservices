@@ -15,6 +15,9 @@ public record CreateTransactionRequest(
 
         UUID toAccountId,
 
+        @Size(min = 16, max = 16)
+        String toAccountNumber,
+
         @NotNull
         @DecimalMin(value = "0.01")
         BigDecimal amount,
