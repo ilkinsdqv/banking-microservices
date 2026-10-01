@@ -24,6 +24,8 @@ public interface LoanService {
 
     List<LoanResponse> getLoansByAccountId(UUID accountId);
 
+    List<LoanResponse> getAllLoans();
+
     LoanResponse approveLoan(UUID id, String ipAddress);
 
     LoanResponse rejectLoan(UUID id, String ipAddress);

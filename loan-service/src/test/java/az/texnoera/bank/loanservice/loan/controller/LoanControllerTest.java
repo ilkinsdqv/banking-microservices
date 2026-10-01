@@ -237,6 +237,31 @@ class LoanControllerTest {
     }
 
     @Test
+    void getAdminLoanApplications_returnsOk() {
+
+        List<LoanResponse> loans =
+                List.of(loanResponse);
+
+        when(loanService.getAllLoans())
+                .thenReturn(loans);
+
+        ResponseEntity<List<LoanResponse>> response =
+                controller.getAdminLoanApplications();
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertEquals(
+                loans,
+                response.getBody()
+        );
+
+        verify(loanService).getAllLoans();
+    }
+
+    @Test
     void approveLoan_returnsOk() {
 
         when(httpRequest.getHeader("X-Forwarded-For"))

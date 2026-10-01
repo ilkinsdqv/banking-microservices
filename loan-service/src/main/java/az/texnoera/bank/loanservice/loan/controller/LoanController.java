@@ -46,6 +46,14 @@ public class LoanController {
                 );
     }
 
+    @GetMapping("/admin/applications")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<LoanResponse>> getAdminLoanApplications() {
+        return ResponseEntity.ok(
+                loanService.getAllLoans()
+        );
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize(
             "hasRole('ADMIN') or " +

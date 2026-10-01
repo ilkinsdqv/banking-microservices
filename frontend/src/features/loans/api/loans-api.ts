@@ -2,7 +2,6 @@ import { apiClient } from "../../../lib/axios";
 
 import type {
     CreateLoanRequest,
-    CustomerLoanLookup,
     Loan,
     LoanPayment,
 } from "../types/loan";
@@ -13,6 +12,7 @@ export const loansApi = {
             "/api/v1/loans",
             request,
         );
+
         return response.data;
     },
 
@@ -20,17 +20,15 @@ export const loansApi = {
         const response = await apiClient.get<Loan[]>(
             "/api/v1/loans/my",
         );
+
         return response.data;
     },
 
-    getCustomerLoans: async (
-        fin: string,
-        birthDate: string,
-    ): Promise<CustomerLoanLookup> => {
-        const response = await apiClient.get<CustomerLoanLookup>(
-            "/api/v1/loans/customer",
-            { params: { fin, birthDate } },
+    getAdminApplications: async (): Promise<Loan[]> => {
+        const response = await apiClient.get<Loan[]>(
+            "/api/v1/loans/admin/applications",
         );
+
         return response.data;
     },
 
@@ -38,6 +36,23 @@ export const loansApi = {
         const response = await apiClient.get<Loan>(
             `/api/v1/loans/${id}`,
         );
+
+        return response.data;
+    },
+
+    approve: async (loanId: string): Promise<Loan> => {
+        const response = await apiClient.post<Loan>(
+            `/api/v1/loans/${loanId}/approve`,
+        );
+
+        return response.data;
+    },
+
+    reject: async (loanId: string): Promise<Loan> => {
+        const response = await apiClient.post<Loan>(
+            `/api/v1/loans/${loanId}/reject`,
+        );
+
         return response.data;
     },
 
@@ -45,6 +60,7 @@ export const loansApi = {
         const response = await apiClient.get<LoanPayment[]>(
             `/api/v1/loans/${loanId}/payments`,
         );
+
         return response.data;
     },
 
@@ -56,21 +72,14 @@ export const loansApi = {
         const response = await apiClient.post<Loan>(
             `/api/v1/loans/${loanId}/payment`,
             null,
-            { params: { paymentAccountId, amount } },
+            {
+                params: {
+                    paymentAccountId,
+                    amount,
+                },
+            },
         );
-        return response.data;
-    },
 
-    makeThirdPartyPayment: async (
-        loanId: string,
-        paymentAccountId: string,
-        amount: number,
-    ): Promise<Loan> => {
-        const response = await apiClient.post<Loan>(
-            `/api/v1/loans/${loanId}/third-party-payment`,
-            null,
-            { params: { paymentAccountId, amount } },
-        );
         return response.data;
     },
 
@@ -78,6 +87,7 @@ export const loansApi = {
         const response = await apiClient.post<Loan>(
             `/api/v1/loans/${loanId}/cancel`,
         );
+
         return response.data;
     },
 };

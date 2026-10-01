@@ -73,6 +73,11 @@ const adminNavigation: NavigationItem[] = [
         icon: Landmark,
     },
     {
+        label: "Loan Applications",
+        to: "/admin/loans",
+        icon: CreditCard,
+    },
+    {
         label: "Complaints",
         to: "/admin/complaints",
         icon: MessageSquare,
@@ -154,6 +159,7 @@ function DashboardLayout() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] =
         useState(false);
+
     const [isLoggingOut, setIsLoggingOut] =
         useState(false);
 

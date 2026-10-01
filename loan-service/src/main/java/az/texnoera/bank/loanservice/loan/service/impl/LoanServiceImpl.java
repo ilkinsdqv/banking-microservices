@@ -137,6 +137,16 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getAllLoans() {
+
+        return loanRepository.findAll()
+                .stream()
+                .map(loanMapper::toResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public LoanResponse approveLoan(
             UUID id,

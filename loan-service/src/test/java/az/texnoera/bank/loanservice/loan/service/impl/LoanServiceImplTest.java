@@ -405,6 +405,37 @@ class LoanServiceImplTest {
     }
 
     @Test
+    void getAllLoans_success() {
+
+        Loan loan1 = createLoan(LoanStatus.PENDING);
+        Loan loan2 = createLoan(LoanStatus.APPROVED);
+
+        LoanResponse response1 = mock(LoanResponse.class);
+        LoanResponse response2 = mock(LoanResponse.class);
+
+        when(loanRepository.findAll())
+                .thenReturn(List.of(loan1, loan2));
+
+        when(loanMapper.toResponse(loan1))
+                .thenReturn(response1);
+
+        when(loanMapper.toResponse(loan2))
+                .thenReturn(response2);
+
+        List<LoanResponse> result =
+                loanService.getAllLoans();
+
+        assertEquals(
+                List.of(response1, response2),
+                result
+        );
+
+        verify(loanRepository).findAll();
+        verify(loanMapper).toResponse(loan1);
+        verify(loanMapper).toResponse(loan2);
+    }
+
+    @Test
     void approveLoan_success() {
 
         Loan loan = createLoan(LoanStatus.PENDING);
