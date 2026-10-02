@@ -15,8 +15,14 @@ export interface Transaction {
     id: string;
     fromAccountId: string | null;
     toAccountId: string | null;
+
     amount: number;
     currency: Currency;
+
+    destinationAmount: number | null;
+    destinationCurrency: Currency | null;
+    exchangeRate: number | null;
+
     type: TransactionType;
     status: TransactionStatus;
     description: string | null;
@@ -26,9 +32,12 @@ export interface Transaction {
 
 export interface CreateTransactionRequest {
     fromAccountId?: string;
+    toAccountId?: string;
     toAccountNumber?: string;
+
     amount: number;
     currency: Currency;
+
     type: TransactionType;
     description?: string;
 }

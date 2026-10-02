@@ -2,6 +2,7 @@ import { apiClient } from "../../../lib/axios";
 
 import type {
     CreateLoanRequest,
+    CustomerLoanLookup,
     Loan,
     LoanPayment,
 } from "../types/loan";
@@ -27,6 +28,23 @@ export const loansApi = {
     getAdminApplications: async (): Promise<Loan[]> => {
         const response = await apiClient.get<Loan[]>(
             "/api/v1/loans/admin/applications",
+        );
+
+        return response.data;
+    },
+
+    getCustomerLoans: async (
+        fin: string,
+        birthDate: string,
+    ): Promise<CustomerLoanLookup> => {
+        const response = await apiClient.get<CustomerLoanLookup>(
+            "/api/v1/loans/customer",
+            {
+                params: {
+                    fin,
+                    birthDate,
+                },
+            },
         );
 
         return response.data;
@@ -71,6 +89,25 @@ export const loansApi = {
     ): Promise<Loan> => {
         const response = await apiClient.post<Loan>(
             `/api/v1/loans/${loanId}/payment`,
+            null,
+            {
+                params: {
+                    paymentAccountId,
+                    amount,
+                },
+            },
+        );
+
+        return response.data;
+    },
+
+    makeThirdPartyPayment: async (
+        loanId: string,
+        paymentAccountId: string,
+        amount: number,
+    ): Promise<Loan> => {
+        const response = await apiClient.post<Loan>(
+            `/api/v1/loans/${loanId}/third-party-payment`,
             null,
             {
                 params: {

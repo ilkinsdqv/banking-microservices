@@ -16,6 +16,7 @@ import {
     Wallet,
 } from "lucide-react";
 
+import CurrencyConverter from "../components/CurrencyConverter";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useAccounts } from "../../accounts/hooks/use-accounts";
 import { useUserTransactions } from "../../transactions/hooks/use-user-transactions";
@@ -676,6 +677,9 @@ function DashboardPage() {
                     </div>
                 </section>
             </div>
+
+            {/* Currency converter */}
+            <CurrencyConverter />
 
             {/* KPI strip */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
