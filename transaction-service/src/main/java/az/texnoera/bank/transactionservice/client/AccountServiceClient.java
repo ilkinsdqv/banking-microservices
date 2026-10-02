@@ -16,6 +16,9 @@ public class AccountServiceClient {
     private static final String GET_ACCOUNT =
             "AccountClientgetAccountByIdUUID";
 
+    private static final String GET_ACCOUNT_BY_NUMBER =
+            "AccountClientgetAccountByAccountNumberString";
+
     private static final String DEPOSIT =
             "AccountClientdepositUUIDBalanceOperationRequest";
 
@@ -23,6 +26,7 @@ public class AccountServiceClient {
             "AccountClientwithdrawUUIDBalanceOperationRequest";
 
     private final AccountClient accountClient;
+    private final AccountNumberClient accountNumberClient;
 
     @Retry(name = GET_ACCOUNT)
     @Bulkhead(
@@ -31,6 +35,15 @@ public class AccountServiceClient {
     )
     public AccountResponse getAccountById(UUID accountId) {
         return accountClient.getAccountById(accountId);
+    }
+
+    @Retry(name = GET_ACCOUNT_BY_NUMBER)
+    @Bulkhead(
+            name = GET_ACCOUNT_BY_NUMBER,
+            type = Bulkhead.Type.SEMAPHORE
+    )
+    public AccountResponse getAccountByAccountNumber(String accountNumber) {
+        return accountNumberClient.getAccountByAccountNumber(accountNumber);
     }
 
     @Retry(name = DEPOSIT)

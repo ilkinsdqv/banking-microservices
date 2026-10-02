@@ -9,6 +9,7 @@ import java.util.UUID;
 public record LoanPaymentResponse(
         UUID id,
         UUID loanId,
+        UUID paymentAccountId,
         BigDecimal amount,
         BigDecimal remainingAmount,
         LoanPaymentStatus status,

@@ -6,6 +6,7 @@ export interface Account {
     id: string;
     userId: string;
     iban: string;
+    accountNumber: string;
     balance: number;
     currency: Currency;
     type: AccountType;

@@ -9,6 +9,7 @@ import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.VerificationEmailRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserAuthResponse;
+import az.texnoera.bank.userservice.user.dto.response.UserLookupResponse;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.entity.User;
 import az.texnoera.bank.userservice.user.enums.Role;
@@ -27,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -237,4 +239,26 @@ public class UserServiceImpl implements UserService {
     public boolean existsById(UUID id) {
         return userRepository.existsById(id);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public UserLookupResponse findByFinAndBirthDate(
+            String fin,
+            LocalDate birthDate
+    ) {
+        User user = userRepository.findByFinAndBirthDate(fin, birthDate)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with the provided FIN and birth date"
+                        )
+                );
+
+        return new UserLookupResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getFin(),
+                user.getBirthDate()
+        );
+    }
+
 }

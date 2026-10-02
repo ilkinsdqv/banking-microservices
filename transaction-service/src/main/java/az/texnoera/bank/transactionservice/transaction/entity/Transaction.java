@@ -32,6 +32,16 @@ public class Transaction extends BaseEntity {
     @Column(nullable = false, length = 3)
     private Currency currency;
 
+    @Column(precision = 19, scale = 4)
+    private BigDecimal destinationAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 3)
+    private Currency destinationCurrency;
+
+    @Column(precision = 19, scale = 10)
+    private BigDecimal exchangeRate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TransactionType type;
@@ -56,6 +66,30 @@ public class Transaction extends BaseEntity {
         this.toAccountId = toAccountId;
         this.amount = amount;
         this.currency = currency;
+        this.type = type;
+        this.status = status;
+        this.description = description;
+    }
+
+    public Transaction(
+            UUID fromAccountId,
+            UUID toAccountId,
+            BigDecimal amount,
+            Currency currency,
+            BigDecimal destinationAmount,
+            Currency destinationCurrency,
+            BigDecimal exchangeRate,
+            TransactionType type,
+            TransactionStatus status,
+            String description
+    ) {
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
+        this.amount = amount;
+        this.currency = currency;
+        this.destinationAmount = destinationAmount;
+        this.destinationCurrency = destinationCurrency;
+        this.exchangeRate = exchangeRate;
         this.type = type;
         this.status = status;
         this.description = description;

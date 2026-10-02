@@ -19,6 +19,7 @@ import TransactionDetailPage from "../features/transactions/pages/TransactionDet
 import LoansPage from "../features/loans/pages/LoansPage";
 import CreateLoanPage from "../features/loans/pages/CreateLoanPage";
 import LoanDetailPage from "../features/loans/pages/LoanDetailPage";
+import AdminLoansPage from "../features/loans/pages/AdminLoansPage";
 
 import ComplaintsPage from "../features/complaints/pages/ComplaintsPage";
 import CreateComplaintPage from "../features/complaints/pages/CreateComplaintPage";
@@ -31,9 +32,10 @@ import AdminUserEditPage from "../features/users/pages/AdminUserEditPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
-import {AdminAccountsPage} from "../features/accounts/pages/AdminAccountsPage.tsx";
-import {AdminAuditPage} from "../features/audit/pages/AdminAuditPage.tsx";
-import {AuditLogDetailPage} from "../features/audit/pages/AuditLogDetailPage.tsx";
+
+import { AdminAccountsPage } from "../features/accounts/pages/AdminAccountsPage.tsx";
+import { AdminAuditPage } from "../features/audit/pages/AdminAuditPage.tsx";
+import { AuditLogDetailPage } from "../features/audit/pages/AuditLogDetailPage.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -116,6 +118,8 @@ export const router = createBrowserRouter([
                         path: "/complaints/:id",
                         element: <ComplaintDetailPage />,
                     },
+
+                    // Admin
                     {
                         element: <RoleRoute allowedRoles={["ADMIN"]} />,
                         children: [
@@ -138,6 +142,10 @@ export const router = createBrowserRouter([
                             {
                                 path: "/admin/accounts",
                                 element: <AdminAccountsPage />,
+                            },
+                            {
+                                path: "/admin/loans",
+                                element: <AdminLoansPage />,
                             },
                             {
                                 path: "/admin/audit",

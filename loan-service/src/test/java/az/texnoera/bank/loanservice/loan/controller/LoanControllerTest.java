@@ -2,6 +2,7 @@ package az.texnoera.bank.loanservice.loan.controller;
 
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
+import az.texnoera.bank.loanservice.loan.dto.response.CustomerLoanResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 import az.texnoera.bank.loanservice.loan.entity.Currency;
 import az.texnoera.bank.loanservice.loan.service.LoanService;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -235,6 +237,31 @@ class LoanControllerTest {
     }
 
     @Test
+    void getAdminLoanApplications_returnsOk() {
+
+        List<LoanResponse> loans =
+                List.of(loanResponse);
+
+        when(loanService.getAllLoans())
+                .thenReturn(loans);
+
+        ResponseEntity<List<LoanResponse>> response =
+                controller.getAdminLoanApplications();
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertEquals(
+                loans,
+                response.getBody()
+        );
+
+        verify(loanService).getAllLoans();
+    }
+
+    @Test
     void approveLoan_returnsOk() {
 
         when(httpRequest.getHeader("X-Forwarded-For"))
@@ -347,6 +374,87 @@ class LoanControllerTest {
     }
 
     @Test
+    void findCustomerLoans_returnsOk() {
+
+        LocalDate birthDate = LocalDate.of(1998, 5, 10);
+
+        CustomerLoanResponse customerResponse =
+                mock(CustomerLoanResponse.class);
+
+        when(loanService.findCustomerLoans("AA1234567", birthDate))
+                .thenReturn(customerResponse);
+
+        ResponseEntity<CustomerLoanResponse> response =
+                controller.findCustomerLoans(
+                        "AA1234567",
+                        birthDate
+                );
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertSame(
+                customerResponse,
+                response.getBody()
+        );
+
+        verify(loanService).findCustomerLoans(
+                "AA1234567",
+                birthDate
+        );
+    }
+
+    @Test
+    void makeThirdPartyPayment_returnsOk() {
+
+        BigDecimal amount =
+                new BigDecimal("1000.00");
+
+        when(authentication.getPrincipal())
+                .thenReturn(userId);
+
+        when(httpRequest.getRemoteAddr())
+                .thenReturn("127.0.0.1");
+
+        when(loanService.makeThirdPartyPayment(
+                loanId,
+                userId,
+                accountId,
+                amount,
+                "127.0.0.1"
+        )).thenReturn(loanResponse);
+
+        ResponseEntity<LoanResponse> response =
+                controller.makeThirdPartyPayment(
+                        authentication,
+                        loanId,
+                        accountId,
+                        amount,
+                        httpRequest
+                );
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertSame(
+                loanResponse,
+                response.getBody()
+        );
+
+        verify(loanService).makeThirdPartyPayment(
+                loanId,
+                userId,
+                accountId,
+                amount,
+                "127.0.0.1"
+        );
+    }
+
+    @Test
     void makePayment_returnsOk() {
 
         BigDecimal amount =
@@ -357,6 +465,7 @@ class LoanControllerTest {
 
         when(loanService.makePayment(
                 loanId,
+                accountId,
                 amount,
                 "127.0.0.1"
         )).thenReturn(loanResponse);
@@ -364,6 +473,7 @@ class LoanControllerTest {
         ResponseEntity<LoanResponse> response =
                 controller.makePayment(
                         loanId,
+                        accountId,
                         amount,
                         httpRequest
                 );
@@ -380,6 +490,7 @@ class LoanControllerTest {
 
         verify(loanService).makePayment(
                 loanId,
+                accountId,
                 amount,
                 "127.0.0.1"
         );

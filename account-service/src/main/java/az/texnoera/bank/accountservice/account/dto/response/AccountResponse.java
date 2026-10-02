@@ -11,6 +11,7 @@ public record AccountResponse(
         UUID id,
         UUID userId,
         String iban,
+        String accountNumber,
         BigDecimal balance,
         Currency currency,
         AccountType type,

@@ -6,6 +6,7 @@ import az.texnoera.bank.accountservice.account.entity.Account;
 import az.texnoera.bank.accountservice.account.exception.AccountNotFoundException;
 import az.texnoera.bank.accountservice.account.mapper.AccountMapper;
 import az.texnoera.bank.accountservice.account.repository.AccountRepository;
+import az.texnoera.bank.accountservice.account.service.AccountNumberGenerator;
 import az.texnoera.bank.accountservice.account.service.AccountService;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
 import az.texnoera.bank.accountservice.audit.AuditEventPublisher;
@@ -24,10 +25,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
+    private static final int ACCOUNT_NUMBER_LENGTH = 16;
+
     private final AccountRepository accountRepository;
     private final AuditEventPublisher auditEventPublisher;
     private final AccountMapper accountMapper;
     private final IbanGenerator ibanGenerator;
+    private final AccountNumberGenerator accountNumberGenerator;
     private final UserServiceClient userServiceClient;
 
     @Override
@@ -50,9 +54,16 @@ public class AccountServiceImpl implements AccountService {
             iban = ibanGenerator.generate();
         } while (accountRepository.existsByIban(iban));
 
+        String accountNumber;
+
+        do {
+            accountNumber = accountNumberGenerator.generate();
+        } while (accountRepository.existsByAccountNumber(accountNumber));
+
         Account account = new Account(
                 userId,
                 iban,
+                accountNumber,
                 BigDecimal.ZERO,
                 request.currency(),
                 request.type()
@@ -80,6 +91,22 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() ->
                         new AccountNotFoundException(id)
+                );
+
+        return accountMapper.toResponse(account);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AccountResponse getAccountByAccountNumber(String accountNumber) {
+
+        validateAccountNumber(accountNumber);
+
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Account not found with account number: " + accountNumber
+                        )
                 );
 
         return accountMapper.toResponse(account);
@@ -167,5 +194,41 @@ public class AccountServiceImpl implements AccountService {
         );
 
         return accountMapper.toResponse(account);
+    }
+
+    private void validateAccountNumber(String accountNumber) {
+
+        if (accountNumber == null ||
+                accountNumber.length() != ACCOUNT_NUMBER_LENGTH ||
+                !accountNumber.chars().allMatch(Character::isDigit) ||
+                !isValidLuhn(accountNumber)) {
+
+            throw new IllegalArgumentException(
+                    "Account number must be a valid 16-digit Luhn number"
+            );
+        }
+    }
+
+    private boolean isValidLuhn(String number) {
+
+        int sum = 0;
+        boolean doubleDigit = false;
+
+        for (int i = number.length() - 1; i >= 0; i--) {
+            int digit = Character.digit(number.charAt(i), 10);
+
+            if (doubleDigit) {
+                digit *= 2;
+
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+
+            sum += digit;
+            doubleDigit = !doubleDigit;
+        }
+
+        return sum % 10 == 0;
     }
 }

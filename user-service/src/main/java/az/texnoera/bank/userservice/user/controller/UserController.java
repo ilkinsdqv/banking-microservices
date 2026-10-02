@@ -4,6 +4,7 @@ import az.texnoera.bank.userservice.user.dto.request.ChangePasswordRequest;
 import az.texnoera.bank.userservice.user.dto.request.CreateUserRequest;
 import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserAuthResponse;
+import az.texnoera.bank.userservice.user.dto.response.UserLookupResponse;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import az.texnoera.bank.userservice.user.service.EmailVerificationService;
 import az.texnoera.bank.userservice.user.service.UserService;
@@ -149,6 +150,15 @@ public class UserController {
             @PathVariable UUID id
     ) {
         return userService.getUserForAuthenticationById(id);
+    }
+
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    @GetMapping("/internal/lookup")
+    public UserLookupResponse findByFinAndBirthDate(
+            @RequestParam String fin,
+            @RequestParam java.time.LocalDate birthDate
+    ) {
+        return userService.findByFinAndBirthDate(fin, birthDate);
     }
 
     @GetMapping("/{id}/exists")

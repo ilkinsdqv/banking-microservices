@@ -9,7 +9,9 @@ export type LoanStatus =
     | "DEFAULTED"
     | "CANCELLED";
 
-export type LoanPaymentStatus = "COMPLETED" | "FAILED";
+export type LoanPaymentStatus =
+    | "COMPLETED"
+    | "FAILED";
 
 export interface Loan {
     id: string;
@@ -41,4 +43,13 @@ export interface LoanPayment {
     remainingAmount: number;
     status: LoanPaymentStatus;
     createdAt: string;
+}
+
+export interface CustomerLoanLookup {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    fin: string;
+    birthDate: string;
+    loans: Loan[];
 }

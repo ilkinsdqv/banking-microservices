@@ -46,6 +46,12 @@ function AccountCard({
         );
     };
 
+    const handleCopyAccountNumber = async () => {
+        await navigator.clipboard.writeText(
+            account.accountNumber,
+        );
+    };
+
     return (
         <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl">
             <div className="absolute right-0 top-0 h-32 w-32 translate-x-12 -translate-y-12 rounded-full bg-slate-100/80 blur-2xl transition-transform duration-500 group-hover:translate-x-8" />
@@ -131,29 +137,57 @@ function AccountCard({
                     </div>
                 </div>
 
-                <div className="mt-5 rounded-xl bg-slate-50 px-3.5 py-3">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                                IBAN
-                            </p>
+                <div className="mt-5 space-y-2">
+                    <div className="rounded-xl bg-slate-50 px-3.5 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                                    IBAN
+                                </p>
 
-                            <p className="mt-1 truncate font-mono text-xs font-medium text-slate-600">
-                                {maskedIban}
-                            </p>
+                                <p className="mt-1 truncate font-mono text-xs font-medium text-slate-600">
+                                    {maskedIban}
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleCopyIban}
+                                aria-label="Copy IBAN"
+                                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
+                            >
+                                <Copy
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </button>
                         </div>
+                    </div>
 
-                        <button
-                            type="button"
-                            onClick={handleCopyIban}
-                            aria-label="Copy IBAN"
-                            className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
-                        >
-                            <Copy
-                                className="h-4 w-4"
-                                aria-hidden="true"
-                            />
-                        </button>
+                    <div className="rounded-xl bg-slate-50 px-3.5 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                                    Account Number
+                                </p>
+
+                                <p className="mt-1 truncate font-mono text-xs font-medium tracking-wider text-slate-600">
+                                    {account.accountNumber}
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleCopyAccountNumber}
+                                aria-label="Copy account number"
+                                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
+                            >
+                                <Copy
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

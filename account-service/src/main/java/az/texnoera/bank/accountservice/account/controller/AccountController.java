@@ -71,6 +71,16 @@ public class AccountController {
         );
     }
 
+    @GetMapping("/internal/account-number/{accountNumber}")
+    @PreAuthorize("hasRole('INTERNAL_SERVICE')")
+    public ResponseEntity<AccountResponse> getAccountByAccountNumberInternal(
+            @PathVariable String accountNumber
+    ) {
+        return ResponseEntity.ok(
+                accountService.getAccountByAccountNumber(accountNumber)
+        );
+    }
+
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('ADMIN') or @accountSecurityService.isCurrentUser(authentication, #userId)")
     public ResponseEntity<List<AccountResponse>> getAccountsByUserId(

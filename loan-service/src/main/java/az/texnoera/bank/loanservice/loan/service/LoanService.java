@@ -3,8 +3,10 @@ package az.texnoera.bank.loanservice.loan.service;
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
+import az.texnoera.bank.loanservice.loan.dto.response.CustomerLoanResponse;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +24,8 @@ public interface LoanService {
 
     List<LoanResponse> getLoansByAccountId(UUID accountId);
 
+    List<LoanResponse> getAllLoans();
+
     LoanResponse approveLoan(UUID id, String ipAddress);
 
     LoanResponse rejectLoan(UUID id, String ipAddress);
@@ -30,8 +34,22 @@ public interface LoanService {
 
     LoanResponse cancelLoan(UUID id, String ipAddress);
 
+    CustomerLoanResponse findCustomerLoans(
+            String fin,
+            LocalDate birthDate
+    );
+
+    LoanResponse makeThirdPartyPayment(
+            UUID id,
+            UUID payerUserId,
+            UUID paymentAccountId,
+            BigDecimal amount,
+            String ipAddress
+    );
+
     LoanResponse makePayment(
             UUID id,
+            UUID paymentAccountId,
             BigDecimal amount,
             String ipAddress
     );

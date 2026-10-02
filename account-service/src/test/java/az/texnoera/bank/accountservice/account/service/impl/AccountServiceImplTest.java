@@ -9,6 +9,7 @@ import az.texnoera.bank.accountservice.account.exception.AccountNotFoundExceptio
 import az.texnoera.bank.accountservice.account.mapper.AccountMapper;
 import az.texnoera.bank.accountservice.account.repository.AccountRepository;
 import az.texnoera.bank.accountservice.account.service.IbanGenerator;
+import az.texnoera.bank.accountservice.account.service.AccountNumberGenerator;
 import az.texnoera.bank.accountservice.audit.AuditEventPublisher;
 import az.texnoera.bank.accountservice.client.UserServiceClient;
 import az.texnoera.bank.common.audit.AuditAction;
@@ -48,6 +49,9 @@ class AccountServiceImplTest {
     private IbanGenerator ibanGenerator;
 
     @Mock
+    private AccountNumberGenerator accountNumberGenerator;
+
+    @Mock
     private UserServiceClient userServiceClient;
 
     private AccountServiceImpl service;
@@ -59,6 +63,7 @@ class AccountServiceImplTest {
                 auditEventPublisher,
                 accountMapper,
                 ibanGenerator,
+                accountNumberGenerator,
                 userServiceClient
         );
     }
@@ -68,11 +73,13 @@ class AccountServiceImplTest {
         UUID userId = UUID.randomUUID();
         CreateAccountRequest request =
                 new CreateAccountRequest(Currency.AZN, AccountType.CHECKING);
-        AccountResponse response = response(userId, "AZ10NABZ12345678901234567890", BigDecimal.ZERO);
+        AccountResponse response = response(userId, "AZ10NABZ12345678901234567890", "4532015112830366", BigDecimal.ZERO);
 
         when(userServiceClient.userExists(userId)).thenReturn(true);
         when(ibanGenerator.generate()).thenReturn(response.iban());
         when(accountRepository.existsByIban(response.iban())).thenReturn(false);
+        when(accountNumberGenerator.generate()).thenReturn(response.accountNumber());
+        when(accountRepository.existsByAccountNumber(response.accountNumber())).thenReturn(false);
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(accountMapper.toResponse(any(Account.class))).thenReturn(response);
 
@@ -99,11 +106,13 @@ class AccountServiceImplTest {
 
         when(userServiceClient.userExists(userId)).thenReturn(true);
         when(ibanGenerator.generate()).thenReturn(duplicate, unique);
+        when(accountNumberGenerator.generate()).thenReturn("4532015112830366");
         when(accountRepository.existsByIban(duplicate)).thenReturn(true);
         when(accountRepository.existsByIban(unique)).thenReturn(false);
+        when(accountRepository.existsByAccountNumber("4532015112830366")).thenReturn(false);
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(accountMapper.toResponse(any(Account.class))).thenReturn(
-                response(userId, unique, BigDecimal.ZERO)
+                response(userId, unique, "4532015112830366", BigDecimal.ZERO)
         );
 
         AccountResponse result = service.createAccount(
@@ -137,7 +146,7 @@ class AccountServiceImplTest {
         UUID accountId = UUID.randomUUID();
         Account account = account(UUID.randomUUID(), new BigDecimal("25.00"));
         AccountResponse response =
-                response(account.getUserId(), account.getIban(), account.getBalance());
+                response(account.getUserId(), account.getIban(), account.getAccountNumber(), account.getBalance());
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toResponse(account)).thenReturn(response);
@@ -165,7 +174,7 @@ class AccountServiceImplTest {
         when(accountMapper.toResponse(any(Account.class)))
                 .thenAnswer(invocation -> {
                     Account account = invocation.getArgument(0);
-                    return response(account.getUserId(), account.getIban(), account.getBalance());
+                    return response(account.getUserId(), account.getIban(), account.getAccountNumber(), account.getBalance());
                 });
 
         assertThat(service.getAccountsByUserId(userId))
@@ -180,7 +189,7 @@ class AccountServiceImplTest {
         Account account = account(userId, new BigDecimal("10.00"));
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toResponse(account)).thenAnswer(invocation ->
-                response(userId, account.getIban(), account.getBalance()));
+                response(userId, account.getIban(), account.getAccountNumber(), account.getBalance()));
 
         AccountResponse response = service.deposit(
                 accountId,
@@ -207,7 +216,7 @@ class AccountServiceImplTest {
         Account account = account(userId, new BigDecimal("20.00"));
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toResponse(account)).thenAnswer(invocation ->
-                response(userId, account.getIban(), account.getBalance()));
+                response(userId, account.getIban(), account.getAccountNumber(), account.getBalance()));
 
         AccountResponse response = service.withdraw(
                 accountId,
@@ -261,6 +270,7 @@ class AccountServiceImplTest {
         return new Account(
                 userId,
                 "AZ10NABZ12345678901234567890",
+                "4532015112830366",
                 balance,
                 Currency.AZN,
                 AccountType.CHECKING
@@ -270,12 +280,14 @@ class AccountServiceImplTest {
     private static AccountResponse response(
             UUID userId,
             String iban,
+            String accountNumber,
             BigDecimal balance
     ) {
         return new AccountResponse(
                 null,
                 userId,
                 iban,
+                accountNumber,
                 balance,
                 Currency.AZN,
                 AccountType.CHECKING,

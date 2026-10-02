@@ -2,6 +2,7 @@ package az.texnoera.bank.loanservice.loan.controller;
 
 import az.texnoera.bank.loanservice.loan.dto.request.CreateLoanRequest;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanPaymentResponse;
+import az.texnoera.bank.loanservice.loan.dto.response.CustomerLoanResponse;
 import az.texnoera.bank.loanservice.loan.dto.response.LoanResponse;
 import az.texnoera.bank.loanservice.loan.service.LoanService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +44,14 @@ public class LoanController {
                                 getClientIpAddress(httpRequest)
                         )
                 );
+    }
+
+    @GetMapping("/admin/applications")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<LoanResponse>> getAdminLoanApplications() {
+        return ResponseEntity.ok(
+                loanService.getAllLoans()
+        );
     }
 
     @GetMapping("/{id}")
@@ -147,6 +157,37 @@ public class LoanController {
         );
     }
 
+    @GetMapping("/customer")
+    public ResponseEntity<CustomerLoanResponse> findCustomerLoans(
+            @RequestParam String fin,
+            @RequestParam LocalDate birthDate
+    ) {
+        return ResponseEntity.ok(
+                loanService.findCustomerLoans(fin, birthDate)
+        );
+    }
+
+    @PostMapping("/{id}/third-party-payment")
+    public ResponseEntity<LoanResponse> makeThirdPartyPayment(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @RequestParam UUID paymentAccountId,
+            @RequestParam BigDecimal amount,
+            HttpServletRequest httpRequest
+    ) {
+        UUID payerUserId = (UUID) authentication.getPrincipal();
+
+        return ResponseEntity.ok(
+                loanService.makeThirdPartyPayment(
+                        id,
+                        payerUserId,
+                        paymentAccountId,
+                        amount,
+                        getClientIpAddress(httpRequest)
+                )
+        );
+    }
+
     @PostMapping("/{id}/payment")
     @PreAuthorize(
             "hasRole('ADMIN') or " +
@@ -154,6 +195,7 @@ public class LoanController {
     )
     public ResponseEntity<LoanResponse> makePayment(
             @PathVariable UUID id,
+            @RequestParam UUID paymentAccountId,
             @RequestParam BigDecimal amount,
             HttpServletRequest httpRequest
     ) {
@@ -161,6 +203,7 @@ public class LoanController {
         return ResponseEntity.ok(
                 loanService.makePayment(
                         id,
+                        paymentAccountId,
                         amount,
                         getClientIpAddress(httpRequest)
                 )

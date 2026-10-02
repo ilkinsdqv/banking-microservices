@@ -1,13 +1,8 @@
-import {
-    Banknote,
-    CheckCircle2,
-    CircleDollarSign,
-    CreditCard,
-    ShieldCheck,
-} from "lucide-react";
 import { useState } from "react";
 
-import { Button, Input } from "../../../components/ui";
+import { useAuth } from "../../auth/hooks/use-auth";
+import { useAccounts } from "../../accounts/hooks/use-accounts";
+
 import { useMakeLoanPayment } from "../hooks/use-make-loan-payment";
 import type { Loan } from "../types/loan";
 
@@ -21,9 +16,18 @@ function LoanPaymentForm({
                              onSuccess,
                          }: LoanPaymentFormProps) {
     const [amount, setAmount] = useState("");
+    const [paymentAccountId, setPaymentAccountId] = useState("");
     const [error, setError] = useState("");
 
     const makePayment = useMakeLoanPayment();
+
+    const { user } = useAuth();
+    const { data: accounts, isLoading: isAccountsLoading, isError: isAccountsError } =
+        useAccounts(user?.id ?? null);
+
+    const paymentAccounts = accounts?.filter(
+        (account) => account.currency === loan.currency,
+    ) ?? [];
 
     const handleSubmit = async (
         event: React.FormEvent<HTMLFormElement>,
@@ -39,6 +43,11 @@ function LoanPaymentForm({
             return;
         }
 
+        if (!paymentAccountId) {
+            setError("Please select the account to pay from.");
+            return;
+        }
+
         if (parsedAmount > loan.remainingAmount) {
             setError(
                 "Payment amount cannot exceed the remaining loan amount.",
@@ -49,10 +58,12 @@ function LoanPaymentForm({
         try {
             await makePayment.mutateAsync({
                 loanId: loan.id,
+                paymentAccountId,
                 amount: parsedAmount,
             });
 
             setAmount("");
+            setPaymentAccountId("");
             onSuccess();
         } catch {
             setError(
@@ -61,122 +72,116 @@ function LoanPaymentForm({
         }
     };
 
-    const remainingAmount = loan.remainingAmount.toFixed(2);
-
     return (
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
-                        <Banknote className="h-5 w-5 text-indigo-600" />
-                    </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                    Make a payment
+                </h2>
 
-                    <div>
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Make a payment
-                        </h2>
-
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Make a payment toward your active loan.
-                        </p>
-                    </div>
-                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                    Remaining amount:{" "}
+                    <span className="font-medium text-slate-700">
+            {loan.remainingAmount.toFixed(2)} {loan.currency}
+          </span>
+                </p>
             </div>
 
-            <div className="p-5 sm:p-6">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                                <CircleDollarSign className="h-4 w-4 text-slate-600" />
-                            </div>
+            <form
+                onSubmit={handleSubmit}
+                className="mt-5 space-y-4"
+            >
+                <div>
+                    <label
+                        htmlFor="payment-account"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Pay from account
+                    </label>
 
-                            <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                    Remaining balance
-                                </p>
-
-                                <p className="mt-0.5 text-sm font-semibold text-slate-900">
-                                    {remainingAmount} {loan.currency}
-                                </p>
-                            </div>
+                    {isAccountsLoading ? (
+                        <div className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-500">
+                            Loading your accounts...
                         </div>
-
-                        <CreditCard className="h-5 w-5 text-slate-300" />
-                    </div>
-                </div>
-
-                <form
-                    onSubmit={handleSubmit}
-                    className="mt-5 space-y-5"
-                >
-                    <Input
-                        label="Payment amount"
-                        type="number"
-                        min="0.01"
-                        max={loan.remainingAmount}
-                        step="0.01"
-                        inputMode="decimal"
-                        placeholder="100.00"
-                        value={amount}
-                        onChange={(event) => setAmount(event.target.value)}
-                        disabled={makePayment.isPending}
-                        leftElement={
-                            <CircleDollarSign className="h-4 w-4" />
-                        }
-                        rightElement={
-                            <span className="font-semibold">
-                                {loan.currency}
-                            </span>
-                        }
-                    />
-
-                    {error && (
-                        <div
-                            role="alert"
-                            className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+                    ) : isAccountsError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                            Could not load your accounts.
+                        </div>
+                    ) : (
+                        <select
+                            id="payment-account"
+                            value={paymentAccountId}
+                            onChange={(event) => setPaymentAccountId(event.target.value)}
+                            disabled={makePayment.isPending || paymentAccounts.length === 0}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                         >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
-                                <CreditCard className="h-4 w-4 text-red-600" />
-                            </div>
-
-                            <p className="pt-1 text-sm font-medium text-red-700">
-                                {error}
-                            </p>
-                        </div>
+                            <option value="">Select an account</option>
+                            {paymentAccounts.map((account) => (
+                                <option key={account.id} value={account.id}>
+                                    {account.iban} — {account.balance.toFixed(2)} {account.currency}
+                                </option>
+                            ))}
+                        </select>
                     )}
 
-                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3.5">
-                        <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+                    {paymentAccounts.length === 0 && !isAccountsLoading && !isAccountsError && (
+                        <p className="mt-2 text-sm text-amber-700">
+                            You do not have an account in {loan.currency} available for this payment.
+                        </p>
+                    )}
+                </div>
 
-                        <p className="text-xs leading-5 text-slate-600">
-                            Your payment will be applied to this loan after
-                            confirmation.
+                <div>
+                    <label
+                        htmlFor="payment-amount"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Payment amount
+                    </label>
+
+                    <div className="flex">
+                        <input
+                            id="payment-amount"
+                            type="number"
+                            min="0.01"
+                            max={loan.remainingAmount}
+                            step="0.01"
+                            value={amount}
+                            onChange={(event) => setAmount(event.target.value)}
+                            placeholder="100.00"
+                            disabled={makePayment.isPending}
+                            className="min-w-0 flex-1 rounded-l-lg border border-r-0 border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                        />
+
+                        <div className="flex items-center rounded-r-lg border border-slate-300 bg-slate-50 px-4 text-sm font-medium text-slate-600">
+                            {loan.currency}
+                        </div>
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                        <p className="text-sm text-red-700">
+                            {error}
                         </p>
                     </div>
+                )}
 
-                    <Button
-                        type="submit"
-                        disabled={
-                            makePayment.isPending ||
-                            loan.remainingAmount <= 0
-                        }
-                        className="w-full"
-                    >
-                        {makePayment.isPending ? (
-                            <>
-                                <Banknote className="h-4 w-4 animate-pulse" />
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <CheckCircle2 className="h-4 w-4" />
-                                Make payment
-                            </>
-                        )}
-                    </Button>
-                </form>
-            </div>
+                <button
+                    type="submit"
+                    disabled={
+                        makePayment.isPending ||
+                        loan.remainingAmount <= 0 ||
+                        !paymentAccountId ||
+                        paymentAccounts.length === 0
+                    }
+                    className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {makePayment.isPending
+                        ? "Processing..."
+                        : "Make payment"}
+                </button>
+            </form>
         </div>
     );
 }

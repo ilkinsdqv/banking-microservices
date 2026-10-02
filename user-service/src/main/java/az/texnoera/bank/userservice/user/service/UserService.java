@@ -6,8 +6,10 @@ import az.texnoera.bank.userservice.user.dto.request.UpdateUserRequest;
 import az.texnoera.bank.userservice.user.dto.response.UserAuthResponse;
 import az.texnoera.bank.userservice.user.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
+import az.texnoera.bank.userservice.user.dto.response.UserLookupResponse;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public interface UserService {
@@ -28,4 +30,5 @@ public interface UserService {
     UserAuthResponse getUserForAuthentication(String email);
     UserAuthResponse getUserForAuthenticationById(UUID id);
     boolean existsById(UUID id);
+    UserLookupResponse findByFinAndBirthDate(String fin, LocalDate birthDate);
 }

@@ -3,8 +3,8 @@ package az.texnoera.bank.transactionservice.transaction.service.impl;
 import az.texnoera.bank.common.audit.AuditAction;
 import az.texnoera.bank.common.audit.AuditStatus;
 import az.texnoera.bank.transactionservice.audit.AuditEventPublisher;
-import az.texnoera.bank.transactionservice.client.AccountClient;
 import az.texnoera.bank.transactionservice.client.AccountServiceClient;
+import az.texnoera.bank.transactionservice.client.FxRateClient;
 import az.texnoera.bank.transactionservice.client.dto.AccountResponse;
 import az.texnoera.bank.transactionservice.transaction.dto.request.BalanceOperationRequest;
 import az.texnoera.bank.transactionservice.transaction.dto.request.CreateTransactionRequest;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ public class TransactionServiceImpl
     private final TransactionMapper transactionMapper;
     private final AccountServiceClient accountServiceClient;
     private final AuditEventPublisher auditEventPublisher;
+    private final FxRateClient fxRateClient;
 
     @Override
     @Transactional
@@ -280,9 +282,7 @@ public class TransactionServiceImpl
                 );
 
         AccountResponse destinationAccount =
-                accountServiceClient.getAccountById(
-                        request.toAccountId()
-                );
+                resolveDestinationAccount(request);
 
         validateAccountOwner(sourceAccount, userId);
 
@@ -296,16 +296,31 @@ public class TransactionServiceImpl
                 request.currency()
         );
 
-        validateCurrency(
-                destinationAccount,
-                request.currency()
-        );
+        Currency sourceCurrency =
+                Currency.valueOf(sourceAccount.currency());
+
+        Currency destinationCurrency =
+                Currency.valueOf(destinationAccount.currency());
+
+        BigDecimal exchangeRate =
+                fxRateClient.getRate(
+                        sourceCurrency.name(),
+                        destinationCurrency.name()
+                );
+
+        BigDecimal destinationAmount =
+                request.amount()
+                        .multiply(exchangeRate)
+                        .setScale(4, RoundingMode.HALF_UP);
 
         Transaction transaction = new Transaction(
                 sourceAccount.id(),
                 destinationAccount.id(),
                 request.amount(),
-                request.currency(),
+                sourceCurrency,
+                destinationAmount,
+                destinationCurrency,
+                exchangeRate,
                 TransactionType.TRANSFER,
                 TransactionStatus.PENDING,
                 request.description()
@@ -328,7 +343,7 @@ public class TransactionServiceImpl
                 accountServiceClient.deposit(
                         destinationAccount.id(),
                         new BalanceOperationRequest(
-                                request.amount()
+                                destinationAmount
                         )
                 );
 
@@ -413,11 +428,19 @@ public class TransactionServiceImpl
         }
 
         case TRANSFER -> {
+            boolean hasDestinationAccountId =
+                    request.toAccountId() != null;
+
+            boolean hasDestinationAccountNumber =
+                    request.toAccountNumber() != null &&
+                            !request.toAccountNumber().isBlank();
+
             if (request.fromAccountId() == null ||
-                    request.toAccountId() == null) {
+                    (!hasDestinationAccountId && !hasDestinationAccountNumber) ||
+                    (hasDestinationAccountId && hasDestinationAccountNumber)) {
 
                 throw new IllegalArgumentException(
-                        "TRANSFER requires both account IDs"
+                        "TRANSFER requires fromAccountId and exactly one destination identifier"
                 );
             }
         }
@@ -427,6 +450,23 @@ public class TransactionServiceImpl
                         "Loan disbursement must use internal endpoint"
                 );
         }
+    }
+
+    private AccountResponse resolveDestinationAccount(
+            CreateTransactionRequest request
+    ) {
+
+        if (request.toAccountNumber() != null &&
+                !request.toAccountNumber().isBlank()) {
+
+            return accountServiceClient.getAccountByAccountNumber(
+                    request.toAccountNumber()
+            );
+        }
+
+        return accountServiceClient.getAccountById(
+                request.toAccountId()
+        );
     }
 
     private void validateAccountOwner(

@@ -123,6 +123,12 @@ function AccountDetailPage() {
         );
     };
 
+    const handleCopyAccountNumber = async () => {
+        await navigator.clipboard.writeText(
+            account.accountNumber,
+        );
+    };
+
     return (
         <>
             <div className="space-y-6">
@@ -331,6 +337,30 @@ function AccountDetailPage() {
                                             handleCopyIban
                                         }
                                         aria-label="Copy IBAN"
+                                        className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                                    >
+                                        <Copy
+                                            className="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                </dd>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-5 py-4">
+                                <dt className="text-sm text-slate-500">
+                                    Account Number
+                                </dt>
+
+                                <dd className="flex min-w-0 items-center gap-2 text-right">
+                                    <span className="truncate font-mono text-xs font-medium text-slate-800 sm:text-sm">
+                                        {account.accountNumber}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyAccountNumber}
+                                        aria-label="Copy account number"
                                         className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                                     >
                                         <Copy
